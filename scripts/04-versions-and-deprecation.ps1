@@ -47,4 +47,16 @@ az apic api version update `
   -o table
 if ($LASTEXITCODE -ne 0) { throw "Failed to update API version 'v1'." }
 
-Write-Host "==> In the portal: show API 'Fleet Vehicle API' with two versions, v1 badged Deprecated, v2 Production."
+Write-Host "==> Importing Fleet Vehicle API v2 into API Management at /fleet"
+az apim api import `
+  --resource-group $env:APIM_RESOURCE_GROUP `
+  --service-name $env:APIM_SERVICE `
+  --api-id $env:API_ID `
+  --path "fleet" `
+  --display-name $env:API_TITLE `
+  --specification-format "OpenAPI" `
+  --specification-path "$SamplesDir/fleet-vehicle-v2.json" `
+  -o table
+if ($LASTEXITCODE -ne 0) { throw "Failed to import Fleet Vehicle API into API Management." }
+
+Write-Host "==> In the portals: show API Center version history and the APIM-hosted /fleet API."

@@ -6,13 +6,14 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "00-vars.ps1")
 
 Write-Host "==> 1) Self-service developer portal"
-Write-Host "    Portal URL pattern: https://$($env:APIC_SERVICE).portal.<region>.azure-api.net"
-Write-Host "    (Confirm exact URL with: az apic service show -g $($env:RESOURCE_GROUP) -n $($env:APIC_SERVICE))"
-az apic service show `
+Write-Host "    Portal URL: https://$($env:APIC_SERVICE).portal.$($env:LOCATION).azure-apicenter.ms"
+Write-Host "    Configure and publish access under API Center > Consumption > Portal settings."
+az apic show `
   --resource-group $env:RESOURCE_GROUP `
   --name $env:APIC_SERVICE `
-  --query "{name:name, id:id}" `
+  --query "{name:name, dataApiHostname:dataApiHostname}" `
   -o table
+if ($LASTEXITCODE -ne 0) { throw "Failed to retrieve API Center service '$($env:APIC_SERVICE)'." }
 
 Write-Host ""
 Write-Host "==> 2) VS Code extension moment"
@@ -29,7 +30,7 @@ Write-Host @'
     az apic api register `
       --resource-group $env:RESOURCE_GROUP `
       --service-name $env:APIC_SERVICE `
-      --api-location "./samples/fleet-vehicle-v2.json"
+      --api-location "../samples/fleet-vehicle-v2.json"
 '@
 Write-Host "    (az apic api register auto-detects title/version/type from the spec — one command, no portal clicks.)"
 
@@ -41,3 +42,4 @@ az apic api list `
   --service-name $env:APIC_SERVICE `
   --query "[?customProperties.lifecycleStage=='production'].{title:title, id:name}" `
   -o table
+if ($LASTEXITCODE -ne 0) { throw "Failed to query APIs in API Center service '$($env:APIC_SERVICE)'." }

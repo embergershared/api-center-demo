@@ -1,51 +1,33 @@
 # 00-vars.ps1 — shared variables for the API Center demo.
-# Dot-source this at the top of every script: `. ./00-vars.ps1`
+# Initialize once with parameters; later scripts reuse the environment values.
 
-# ---- EDIT THESE ----
+param(
+	[string]$BaseValue = $env:APIC_BASE_VALUE,
+
+	[string]$PublisherEmail = $env:APIM_PUBLISHER_EMAIL,
+
+	[string]$PublisherName = $env:APIM_PUBLISHER_NAME
+)
+
+if ($BaseValue -notmatch '^[A-Za-z0-9]{3,4}$') {
+	throw "BaseValue must be a 3-4 character alphanumeric value, such as your initials."
+}
+if ($PublisherEmail -notmatch '^[^@\s]+@[^@\s]+\.[^@\s]+$') {
+	throw "PublisherEmail must be a valid email address."
+}
+if ([string]::IsNullOrWhiteSpace($PublisherName)) {
+	throw "PublisherName must be an organization name."
+}
+
+$normalizedBaseValue = $BaseValue.ToLowerInvariant()
+$env:APIC_BASE_VALUE      = $normalizedBaseValue
 $env:RESOURCE_GROUP      = "rg-apic-demo-eus01"
 $env:LOCATION            = "eastus"
-$env:APIM_SERVICE        = ""                           # existing APIM name, optional (step 05)
-$env:APIM_RESOURCE_GROUP = $env:RESOURCE_GROUP           # RG of the existing APIM, if different
-
-$statePath = Join-Path $PSScriptRoot "../.apic-demo-state.json"
-$requestedService = $env:APIC_SERVICE
-$savedState = if (Test-Path $statePath) {
-	Get-Content $statePath -Raw | ConvertFrom-Json
-}
-
-$existingJson = az resource list `
-  --resource-group $env:RESOURCE_GROUP `
-  --resource-type "Microsoft.ApiCenter/services" `
-  --query "[].name" `
-  -o json 2>$null
-[string[]]$existingServices = if ($LASTEXITCODE -eq 0 -and $existingJson) {
-	@($existingJson | ConvertFrom-Json)
-} else {
-	@()
-}
-
-if ($existingServices.Count -eq 1) {
-	$env:APIC_SERVICE = $existingServices[0]
-} elseif ($existingServices.Count -gt 1) {
-	$preferredService = @($requestedService, $savedState.apiCenterService) |
-		Where-Object { $_ -and $_ -in $existingServices } |
-		Select-Object -First 1
-	if (-not $preferredService) {
-		throw "Multiple API Center services exist in '$($env:RESOURCE_GROUP)'. Set APIC_SERVICE to the intended existing service before running this script."
-	}
-	$env:APIC_SERVICE = $preferredService
-} elseif (-not [string]::IsNullOrWhiteSpace($requestedService)) {
-	$env:APIC_SERVICE = $requestedService
-} elseif ($savedState -and $savedState.resourceGroup -eq $env:RESOURCE_GROUP) {
-	$env:APIC_SERVICE = $savedState.apiCenterService
-} else {
-	$env:APIC_SERVICE = "apic-demo-$(Get-Random)"
-}
-
-@{
-	resourceGroup = $env:RESOURCE_GROUP
-	apiCenterService = $env:APIC_SERVICE
-} | ConvertTo-Json | Set-Content $statePath
+$env:APIC_SERVICE        = "apic-$normalizedBaseValue-eus02"
+$env:APIM_RESOURCE_GROUP = $env:RESOURCE_GROUP
+$env:APIM_SERVICE        = "apim-$normalizedBaseValue-eus02"
+$env:APIM_PUBLISHER_EMAIL = $PublisherEmail
+$env:APIM_PUBLISHER_NAME  = $PublisherName
 
 # Logical names used across scripts
 $env:API_ID    = "fleet-vehicle-api"
@@ -54,4 +36,18 @@ $env:ENV_DEV   = "dev"
 $env:ENV_TEST  = "test"
 $env:ENV_PROD  = "prod"
 
-Write-Host "Vars loaded: RG=$($env:RESOURCE_GROUP) LOCATION=$($env:LOCATION) APIC_SERVICE=$($env:APIC_SERVICE)"
+Write-Host ""
+Write-Host "API Center demo variables:"
+Write-Host "APIC_BASE_VALUE=$($env:APIC_BASE_VALUE)"
+Write-Host "RESOURCE_GROUP=$($env:RESOURCE_GROUP)"
+Write-Host "LOCATION=$($env:LOCATION)"
+Write-Host "APIC_SERVICE=$($env:APIC_SERVICE)"
+Write-Host "APIM_RESOURCE_GROUP=$($env:APIM_RESOURCE_GROUP)"
+Write-Host "APIM_SERVICE=$($env:APIM_SERVICE)"
+Write-Host "APIM_PUBLISHER_EMAIL=$($env:APIM_PUBLISHER_EMAIL)"
+Write-Host "APIM_PUBLISHER_NAME=$($env:APIM_PUBLISHER_NAME)"
+Write-Host "API_ID=$($env:API_ID)"
+Write-Host "API_TITLE=$($env:API_TITLE)"
+Write-Host "ENV_DEV=$($env:ENV_DEV)"
+Write-Host "ENV_TEST=$($env:ENV_TEST)"
+Write-Host "ENV_PROD=$($env:ENV_PROD)"
