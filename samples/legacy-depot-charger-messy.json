@@ -1,0 +1,42 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Legacy Depot Charger API",
+    "version": "1.0"
+  },
+  "paths": {
+    "/chargers": {
+      "get": {
+        "operationId": "getChargers",
+        "responses": {
+          "200": {
+            "description": "ok"
+          }
+        }
+      },
+      "post": {
+        "responses": {
+          "200": {
+            "description": "ok"
+          }
+        }
+      }
+    },
+    "/chargers/{id}": {
+      "get": {
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "ok" },
+          "500": { "description": "error" }
+        }
+      },
+      "delete": {
+        "responses": {
+          "204": { "description": "deleted" }
+        }
+      }
+    }
+  }
+}

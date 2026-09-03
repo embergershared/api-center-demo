@@ -1,0 +1,53 @@
+extends: spectral:oas
+
+rules:
+  # Shift-left governance rules for the demo — intentionally simple/visible violations.
+  info-description-required:
+    description: API must have a top-level description.
+    message: "API is missing a description in `info.description`."
+    severity: error
+    given: "$.info"
+    then:
+      field: description
+      function: truthy
+
+  operation-description-required:
+    description: Every operation must have a description.
+    message: "{{property}} operation '{{path}}' is missing a description."
+    severity: warn
+    given: "$.paths[*][*]"
+    then:
+      field: description
+      function: truthy
+
+  operation-operationId-required:
+    description: Every operation must define an operationId.
+    message: "Operation at '{{path}}' is missing an operationId."
+    severity: error
+    given: "$.paths[*][*]"
+    then:
+      field: operationId
+      function: truthy
+
+  no-numeric-only-version:
+    description: API version should follow semver (e.g. 1.0.0) not a bare number.
+    message: "info.version '{{value}}' should be semantic (e.g. 1.0.0)."
+    severity: warn
+    given: "$.info.version"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^\\d+\\.\\d+\\.\\d+$"
+
+  error-response-required:
+    description: Operations should document at least one 4xx/5xx error response.
+    message: "Operation at '{{path}}' has no documented error response."
+    severity: warn
+    given: "$.paths[*][*].responses"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          patternProperties:
+            "^[45]\\d\\d$": {}

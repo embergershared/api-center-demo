@@ -1,0 +1,134 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Fleet Vehicle API",
+    "version": "1.0.0",
+    "description": "A sample API for managing an electrified fleet — vehicles, battery state, and depot charging sessions. Version 1 — to be deprecated in favor of v2."
+  },
+  "paths": {
+    "/vehicles": {
+      "get": {
+        "summary": "List all fleet vehicles",
+        "description": "Returns a paged list of electric vehicles in the fleet.",
+        "operationId": "listVehicles",
+        "responses": {
+          "200": {
+            "description": "A list of vehicles",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Vehicle" } }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Register a vehicle",
+        "description": "Adds a new electric vehicle to the fleet inventory.",
+        "operationId": "createVehicle",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Vehicle" } }
+          }
+        },
+        "responses": {
+          "201": { "description": "Vehicle created" }
+        }
+      }
+    },
+    "/vehicles/{vehicleId}": {
+      "get": {
+        "summary": "Get a vehicle by ID",
+        "description": "Returns a single vehicle's details.",
+        "operationId": "getVehicleById",
+        "parameters": [
+          { "name": "vehicleId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested vehicle",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Vehicle" } }
+            }
+          },
+          "404": { "description": "Vehicle not found" }
+        }
+      }
+    },
+    "/vehicles/{vehicleId}/battery": {
+      "get": {
+        "summary": "Get battery state for a vehicle",
+        "description": "Returns the current state of charge and battery health for a vehicle.",
+        "operationId": "getVehicleBattery",
+        "parameters": [
+          { "name": "vehicleId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Battery state",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BatteryState" } }
+            }
+          }
+        }
+      }
+    },
+    "/depots/{depotId}/charging-sessions": {
+      "get": {
+        "summary": "List charging sessions at a depot",
+        "description": "Returns charging sessions recorded at a depot's chargers.",
+        "operationId": "listDepotChargingSessions",
+        "parameters": [
+          { "name": "depotId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of charging sessions",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ChargingSession" } }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Vehicle": {
+        "type": "object",
+        "required": ["id", "vin", "fleetGroup"],
+        "properties": {
+          "id": { "type": "string", "description": "Unique identifier for the vehicle" },
+          "vin": { "type": "string", "description": "Vehicle identification number" },
+          "make": { "type": "string", "description": "Vehicle manufacturer" },
+          "model": { "type": "string", "description": "Vehicle model" },
+          "fleetGroup": { "type": "string", "description": "Fleet grouping/depot the vehicle is assigned to" }
+        }
+      },
+      "BatteryState": {
+        "type": "object",
+        "required": ["stateOfChargePercent"],
+        "properties": {
+          "stateOfChargePercent": { "type": "number", "description": "Current state of charge, 0-100" },
+          "stateOfHealthPercent": { "type": "number", "description": "Battery health relative to original capacity, 0-100" },
+          "rangeKm": { "type": "number", "description": "Estimated remaining range in kilometers" }
+        }
+      },
+      "ChargingSession": {
+        "type": "object",
+        "required": ["sessionId", "vehicleId", "startTime", "energyDeliveredKwh"],
+        "properties": {
+          "sessionId": { "type": "string", "description": "Unique identifier for the charging session" },
+          "vehicleId": { "type": "string", "description": "The vehicle that was charged" },
+          "chargerId": { "type": "string", "description": "The depot charger used" },
+          "startTime": { "type": "string", "format": "date-time", "description": "When the charging session began" },
+          "endTime": { "type": "string", "format": "date-time", "description": "When the charging session ended" },
+          "energyDeliveredKwh": { "type": "number", "description": "Energy delivered during the session, in kWh" }
+        }
+      }
+    }
+  }
+}
