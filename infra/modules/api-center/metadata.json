@@ -1,0 +1,14 @@
+{
+  "name": "api-center",
+  "displayName": "API Center",
+  "description": "API inventory with a system-assigned identity; Free plan on creation.",
+  "kind": "resource",
+  "abbreviation": "apic",
+  "featureFlag": null,
+  "profiles": ["core", "full"],
+  "providers": ["Microsoft.ApiCenter"],
+  "privateEndpoints": [],
+  "roles": [],
+  "nameRule": "regional",
+  "preflight": { "checks": ["apiCenterRegion"], "requiresOperatorPrincipals": false }
+}

@@ -1,0 +1,23 @@
+{
+  "apiCenter": "apic",
+  "apiManagement": "apim",
+  "applicationInsights": "appins",
+  "aiServices": "ais",
+  "aiProject": "proj",
+  "managedRedis": "amr",
+  "bastion": "bast",
+  "keyVault": "kv",
+  "linuxVirtualMachine": "vm-lin",
+  "logAnalytics": "law",
+  "natGateway": "natgw",
+  "networkInterface": "nic",
+  "networkSecurityGroup": "nsg",
+  "privateEndpoint": "pe",
+  "privateEndpointNetworkInterface": "pe-nic",
+  "publicIp": "pip",
+  "resourceGroup": "rg",
+  "storageAccount": "stacct",
+  "subnet": "snet",
+  "virtualNetwork": "vnet",
+  "windowsVirtualMachine": "vm-win"
+}

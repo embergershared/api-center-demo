@@ -1,0 +1,14 @@
+name: api-center-demo
+metadata:
+  template: azure-azd-starter@0.2.0
+infra:
+  provider: bicep
+  path: infra
+  module: main
+hooks:
+  preprovision:
+    shell: pwsh
+    continueOnError: false
+    run: |
+      ./scripts/set-deployment-tags.ps1
+      ./scripts/preflight.ps1

@@ -1,0 +1,18 @@
+{
+  "name": "api-management",
+  "displayName": "API Management",
+  "description": "Standard v2 gateway with API Center read access; full profile adds model/cache backends, token policies, and identity-based telemetry.",
+  "kind": "resource",
+  "abbreviation": "apim",
+  "featureFlag": null,
+  "profiles": ["core", "full"],
+  "providers": ["Microsoft.ApiManagement", "Microsoft.Authorization"],
+  "privateEndpoints": [],
+  "roles": [
+    { "name": "API Management Service Reader Role", "id": "71522526-b88f-4d52-b57f-d31fc3546d0d" },
+    { "name": "Cognitive Services OpenAI User", "id": "5e0bd9bd-7b93-4f28-af87-19fc36ad61bd" },
+    { "name": "Monitoring Metrics Publisher", "id": "3913510d-42f4-4e42-8a64-420c390055eb" }
+  ],
+  "nameRule": "global",
+  "preflight": { "checks": ["apiManagementRegion"], "requiresOperatorPrincipals": false }
+}

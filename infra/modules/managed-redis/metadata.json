@@ -1,0 +1,14 @@
+{
+  "name": "managed-redis",
+  "displayName": "Azure Managed Redis",
+  "description": "TLS-only Balanced Redis with RediSearch for APIM semantic caching.",
+  "kind": "resource",
+  "abbreviation": "amr",
+  "featureFlag": null,
+  "profiles": ["full"],
+  "providers": ["Microsoft.Cache"],
+  "privateEndpoints": [],
+  "roles": [],
+  "nameRule": "global",
+  "preflight": { "checks": ["managedRedisRegion"], "requiresOperatorPrincipals": false }
+}

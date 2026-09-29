@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": { "value": "${AZURE_ENV_NAME}" },
+    "location": { "value": "${AZURE_LOCATION=eastus}" },
+    "subscriptionCode": { "value": "${AZURE_SUBSCRIPTION_CODE}" },
+    "deploymentProfile": { "value": "${DEPLOYMENT_PROFILE=full}" },
+    "apiCenterSku": { "value": "${API_CENTER_SKU=Free}" },
+    "aiLocation": { "value": "${AI_LOCATION}" },
+    "cacheLocation": { "value": "${CACHE_LOCATION}" },
+    "chatModelName": { "value": "${CHAT_MODEL_NAME=gpt-5.6-luna}" },
+    "chatModelVersion": { "value": "${CHAT_MODEL_VERSION=2026-07-09}" },
+    "chatDeploymentSku": { "value": "${CHAT_DEPLOYMENT_SKU=GlobalStandard}" },
+    "chatCapacity": { "value": "${CHAT_CAPACITY=10}" },
+    "embeddingModelName": { "value": "${EMBEDDING_MODEL_NAME=text-embedding-3-small}" },
+    "embeddingModelVersion": { "value": "${EMBEDDING_MODEL_VERSION=1}" },
+    "embeddingDeploymentSku": { "value": "${EMBEDDING_DEPLOYMENT_SKU=Standard}" },
+    "embeddingCapacity": { "value": "${EMBEDDING_CAPACITY=10}" },
+    "redisSku": { "value": "${REDIS_SKU=Balanced_B0}" },
+    "redisHighAvailability": { "value": "${REDIS_HIGH_AVAILABILITY=false}" },
+    "tokensPerMinute": { "value": "${AI_TOKENS_PER_MINUTE=5000}" },
+    "tokensPerDay": { "value": "${AI_TOKENS_PER_DAY=100000}" },
+    "repository": { "value": "${AZURE_REPOSITORY}" },
+    "createdOn": { "value": "${AZURE_CREATED_ON}" },
+    "lastUpdatedOn": { "value": "${AZURE_LAST_UPDATED_ON}" },
+    "owner": { "value": "${AZURE_OWNER=}" },
+    "costCenter": { "value": "${AZURE_COST_CENTER=}" },
+    "publisherName": { "value": "${APIM_PUBLISHER_NAME=API Center Demo}" },
+    "publisherEmail": { "value": "${APIM_PUBLISHER_EMAIL=api-team@example.com}" }
+  }
+}

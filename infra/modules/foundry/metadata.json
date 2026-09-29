@@ -1,0 +1,15 @@
+{
+  "name": "foundry",
+  "displayName": "Microsoft Foundry",
+  "description": "Modern Foundry account, project, and pay-as-you-go chat and embeddings deployments.",
+  "kind": "composite",
+  "abbreviation": "ais",
+  "additionalAbbreviations": ["proj"],
+  "featureFlag": null,
+  "profiles": ["full"],
+  "providers": ["Microsoft.CognitiveServices"],
+  "privateEndpoints": [],
+  "roles": [],
+  "nameRule": "global",
+  "preflight": { "checks": ["modelAvailability", "modelQuota"], "requiresOperatorPrincipals": false }
+}

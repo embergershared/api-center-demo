@@ -1,0 +1,24 @@
+{
+  "$schema": "https://github.com/embergershared/azure-azd-starter/blob/main/docs/modules.md",
+  "template": "azure-azd-starter",
+  "version": "0.2.0",
+  "stamp": "azure-azd-starter@0.2.0",
+  "appliedOnUtc": "2026-09-28T18:14:03Z",
+  "files": {
+    "infra/core/naming.bicep": "d87ef9e382e544ed3401de7ccdba267d13697b6e55a6f489ea46c0b533d27490",
+    "infra/core/tags.bicep": "838f7d796eb1dd34e88dcbbf2bd09b656a5e8052fd2d4037d8cf510502294c57",
+    "infra/core/private-endpoint.bicep": "0e7c37a47504a99969bf04805e24b89c6b6da47149bd4129615032bff3b56fb2",
+    "infra/core/name-rules.json": "2908346d152a5674e47b7725cc0fb1a01232c4d290049d0000f304216538f9e7",
+    "infra/core/abbreviations.json": "c3c985c96e6906828d2c3d424486b90dc4287c6e77fd681f5450cafc26bec9ae",
+    "infra/core/location-codes.json": "181b8d416799e1b2c1f9b3d9a1ba0a38fbc2438d63b0ada22626759055373642",
+    "scripts/naming.ps1": "bc9ef02ee6954d596bdb09cccb26e0307ee1a22aec2cbd68cfe037884c43cf70",
+    "scripts/preflight.ps1": "ece66470ecb8213a9b5428d7a951b1e795f9c9760b82a8a02b9fc49f21de604c",
+    "scripts/set-deployment-tags.ps1": "96384a90f216211c658326757881f5d583cc4fa2437800c352681310955329f2",
+    "scripts/build-catalog.ps1": "0bcca4227e70a1ec5855dd2b8e402a5200b226dfbcaeab81443ddaf636bfc7ca",
+    "scripts/new-module.ps1": "cc295ed7d769c2df045033babac749d23455fbfc3ecda39deb83073bf572c7cb",
+    "scripts/add-module.ps1": "f79512e9f9cde7496efa8764e78670cb5edfb73c9a144cb9009ddc0f49e0f1be",
+    "scripts/promote-module.ps1": "643677931a054fce6f724bc954f590c4a7f939e2559743dc5234f4162780ed84",
+    "scripts/adopt-conventions.ps1": "21d924b79ecf736e7ff853b2b6dc16a94db2a0e2c7a4f83280a5ef626b63f878",
+    ".github/instructions/naming.instructions.md": "56ee11c3ce43de6e2fa5754976c3ff5a1f21b775e270e9c538c0209506ef0fee"
+  }
+}

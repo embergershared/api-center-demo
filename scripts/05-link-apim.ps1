@@ -1,72 +1,40 @@
-# 05-link-apim.ps1 — integrate the demo APIM instance so its APIs
-# sync automatically into API Center (built-in sync, not a one-time import).
-$ErrorActionPreference = "Stop"
-. (Join-Path $PSScriptRoot "00-vars.ps1")
+# Identity and RBAC are owned by Bicep; this step owns only the demo integration.
+$ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot '00-vars.ps1')
+. (Join-Path $PSScriptRoot 'demo-cli.ps1')
 
-$null = az extension add --name apic-extension --upgrade --allow-preview true --yes 2>&1
-if ($LASTEXITCODE -ne 0) {
-  throw "Failed to install or upgrade the preview apic-extension required for APIM integration."
+$null = Invoke-DemoAz -Arguments @('apic', 'integration', 'create', 'apim', '--help') `
+    -FailureMessage 'Install apic-extension 1.2.0b1 or newer with preview support'
+
+Write-Host '==> Checking the provisioned API Center identity and APIM reader assignment'
+$principalId = Invoke-DemoAz -Arguments @(
+    'apic', 'show', '--resource-group', $env:RESOURCE_GROUP, '--name', $env:APIC_SERVICE,
+    '--query', 'identity.principalId', '--output', 'tsv'
+) -FailureMessage 'Failed to retrieve the API Center identity'
+if ($principalId -ne $env:APIC_PRINCIPAL_ID) {
+    throw 'API Center identity does not match the deployment. Run azd provision, then azd env refresh.'
+}
+$assignment = Invoke-DemoAz -Arguments @(
+    'role', 'assignment', 'list', '--scope', $env:APIM_RESOURCE_ID,
+    '--query', "[?principalId=='$principalId' && roleDefinitionName=='API Management Service Reader Role'].id | [0]",
+    '--output', 'tsv'
+) -FailureMessage 'Failed to retrieve the APIM Reader assignment'
+if ([string]::IsNullOrWhiteSpace($assignment)) {
+    throw 'API Center is missing its provisioned APIM Reader assignment. Run azd provision.'
 }
 
-$null = az apic integration create apim --help 2>&1
-if ($LASTEXITCODE -ne 0) {
-  throw "The installed apic-extension does not provide 'az apic integration create apim'. Version 1.2.0b1 or later is required."
-}
-
-Write-Host "==> Enabling the API Center system-assigned managed identity"
-az apic update `
-  --resource-group $env:RESOURCE_GROUP `
-  --name $env:APIC_SERVICE `
-  --identity '{"type":"SystemAssigned"}' `
-  -o none
-if ($LASTEXITCODE -ne 0) { throw "Failed to enable the API Center managed identity." }
-
-$ApicPrincipalId = az apic show `
-  --resource-group $env:RESOURCE_GROUP `
-  --name $env:APIC_SERVICE `
-  --query identity.principalId `
-  -o tsv
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($ApicPrincipalId)) {
-  throw "Failed to get the API Center managed identity principal ID."
-}
-
-$ApimId = az apim show `
-  --resource-group $env:APIM_RESOURCE_GROUP `
-  --name $env:APIM_SERVICE `
-  --query id -o tsv
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($ApimId)) {
-  throw "Failed to get API Management service '$($env:APIM_SERVICE)'."
-}
-
-Write-Host "==> Granting API Center read-only access to API Management"
-$ExistingRoleAssignmentId = az role assignment list `
-  --assignee-object-id $ApicPrincipalId `
-  --role "API Management Service Reader Role" `
-  --scope $ApimId `
-  --query "[?scope=='$ApimId'].id | [0]" `
-  -o tsv
-if ($LASTEXITCODE -ne 0) { throw "Failed to check API Center read access to API Management." }
-
-if ([string]::IsNullOrWhiteSpace($ExistingRoleAssignmentId)) {
-  az role assignment create `
-    --assignee-object-id $ApicPrincipalId `
-    --assignee-principal-type ServicePrincipal `
-    --role "API Management Service Reader Role" `
-    --scope $ApimId `
-    -o none
-  if ($LASTEXITCODE -ne 0) { throw "Failed to grant API Center read access to API Management." }
-} else {
-  Write-Host "    Reader role assignment already exists."
-}
-
-Write-Host "==> Integrating API Management with API Center ($($env:APIM_SERVICE))"
-az apic integration create apim `
-  --resource-group $env:RESOURCE_GROUP `
-  --service-name $env:APIC_SERVICE `
-  --integration-name "apim-integration" `
-  --azure-apim $ApimId `
-  -o table
-if ($LASTEXITCODE -ne 0) { throw "Failed to integrate API Management with API Center." }
-
-Write-Host "==> All APIs currently in $($env:APIM_SERVICE) will now show up in the API Center catalog,"
-Write-Host "    and stay in sync automatically as APIs are added/changed/removed in APIM."
+Write-Host "==> Integrating API Management with API Center ($env:APIM_SERVICE)"
+Invoke-DemoAz -Arguments @(
+    'apic', 'integration', 'create', 'apim',
+    '--resource-group', $env:RESOURCE_GROUP,
+    '--service-name', $env:APIC_SERVICE,
+    '--integration-name', 'apim-integration',
+    '--azure-apim', $env:APIM_RESOURCE_ID,
+    '--output', 'table'
+) -FailureMessage 'Failed to integrate API Management with API Center'
+Write-Host '==> Synchronization configured; API inventory updates are asynchronous.'
+Write-Host '    In API Center, inspect apim-integration and confirm the imported APIs came from this APIM instance.'
+Write-Host '    For the full profile, run script 08 to check for the Utility AI demonstration catalog entry.'
+Write-Host '==> Plan handoff: after confirming the eligible APIM link, use Overview > Manage plan to select Standard.'
+Write-Host '    After the portal upgrade succeeds, run: azd env set API_CENTER_SKU Standard'
+Write-Host '    Integration creation alone does not confirm synchronization completion or a plan upgrade.'

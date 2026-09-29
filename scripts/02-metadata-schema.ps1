@@ -3,6 +3,27 @@
 # required/optional and assigned to APIs, environments, or deployments.
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "00-vars.ps1")
+. (Join-Path $PSScriptRoot 'demo-cli.ps1')
+
+function Set-DemoMetadata {
+    param(
+        [string] $Name,
+        [string] $Schema,
+        [bool] $Required
+    )
+
+    $assignments = ConvertTo-Json -InputObject @(
+        @{ entity = 'api'; required = $Required; deprecated = $false }
+    )
+    Invoke-DemoAz -Arguments @(
+        'apic', 'metadata', 'create',
+        '--resource-group', $env:RESOURCE_GROUP,
+        '--service-name', $env:APIC_SERVICE,
+        '--metadata-name', $Name,
+        '-o', 'table'
+    ) -JsonArguments @{ '--schema' = $Schema; '--assignments' = $assignments } `
+        -FailureMessage "Failed to create $Name metadata" | Out-Host
+}
 
 Write-Host "==> Creating custom metadata: lifecycleStage (enum, required on APIs)"
 $lifecycleSchema = '{
@@ -17,24 +38,10 @@ $lifecycleSchema = '{
       {"const": "retired"}
     ]
   }'
-az apic metadata create `
-  --resource-group $env:RESOURCE_GROUP `
-  --service-name $env:APIC_SERVICE `
-  --metadata-name "lifecycleStage" `
-  --schema $lifecycleSchema `
-  --assignments '[{"entity":"api","required":true,"deprecated":false}]' `
-  -o table
-if ($LASTEXITCODE -ne 0) { throw "Failed to create lifecycleStage metadata." }
+Set-DemoMetadata -Name 'lifecycleStage' -Schema $lifecycleSchema -Required $true
 
 Write-Host "==> Creating custom metadata: businessOwner (string, required on APIs)"
-az apic metadata create `
-  --resource-group $env:RESOURCE_GROUP `
-  --service-name $env:APIC_SERVICE `
-  --metadata-name "businessOwner" `
-  --schema '{"type": "string"}' `
-  --assignments '[{"entity":"api","required":true,"deprecated":false}]' `
-  -o table
-if ($LASTEXITCODE -ne 0) { throw "Failed to create businessOwner metadata." }
+Set-DemoMetadata -Name 'businessOwner' -Schema '{"type": "string"}' -Required $true
 
 Write-Host "==> Creating custom metadata: complianceTag (enum, multi-select, on APIs)"
 $complianceSchema = '{
@@ -46,17 +53,15 @@ $complianceSchema = '{
         {"const": "HIPAA"},
         {"const": "GDPR"},
         {"const": "SOC2"},
+        {"const": "NERC-CIP"},
         {"const": "internal-only"}
       ]
     }
   }'
-az apic metadata create `
-  --resource-group $env:RESOURCE_GROUP `
-  --service-name $env:APIC_SERVICE `
-  --metadata-name "complianceTag" `
-  --schema $complianceSchema `
-  --assignments '[{"entity":"api","required":false,"deprecated":false}]' `
-  -o table
-if ($LASTEXITCODE -ne 0) { throw "Failed to create complianceTag metadata." }
+Set-DemoMetadata -Name 'complianceTag' -Schema $complianceSchema -Required $false
+
+Write-Host "==> Creating custom metadata: department (optional on APIs)"
+Set-DemoMetadata -Name 'department' -Schema '{"type": "string"}' -Required $false
 
 Write-Host "==> Metadata schema created. These fields will show up as filter facets in the portal."
+Write-Host "NERC-CIP is a catalog classification only, not evidence of regulatory compliance."

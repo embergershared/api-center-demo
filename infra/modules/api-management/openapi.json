@@ -1,0 +1,54 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Utility AI demonstration",
+    "version": "2.0.0",
+    "description": "Synthetic utility glossary only. Not operational or safety-critical advice. Uses subscription authentication; non-streaming requests only."
+  },
+  "paths": {
+    "/chat/completions": {
+      "post": {
+        "operationId": "chat-completions",
+        "summary": "Explain a synthetic utility glossary term",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["messages", "stream", "max_completion_tokens", "reasoning_effort"],
+                "properties": {
+                  "messages": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 2,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["role", "content"],
+                      "properties": {
+                        "role": { "type": "string", "enum": ["system", "user"] },
+                        "content": { "type": "string", "minLength": 1, "maxLength": 4000 }
+                      }
+                    }
+                  },
+                  "stream": { "type": "boolean", "enum": [false] },
+                  "max_completion_tokens": { "type": "integer", "minimum": 1, "maximum": 512 },
+                  "reasoning_effort": { "type": "string", "enum": ["none"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Chat completion or cached response" },
+          "400": { "description": "Invalid request; streaming and tools are not supported" },
+          "401": { "description": "Missing or invalid APIM subscription key" },
+          "403": { "description": "Daily token quota exceeded" },
+          "429": { "description": "Request or token rate limit exceeded" }
+        }
+      }
+    }
+  }
+}
