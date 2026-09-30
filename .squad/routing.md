@@ -6,12 +6,14 @@ How to decide who handles what.
 
 | Work Type | Route To | Examples |
 |-----------|----------|----------|
-| {domain 1} | {Name} | {example tasks} |
-| {domain 2} | {Name} | {example tasks} |
-| {domain 3} | {Name} | {example tasks} |
-| Code review | {Name} | Review PRs, check quality, suggest improvements |
-| Testing | {Name} | Write tests, find edge cases, verify fixes |
-| Scope & priorities | {Name} | What to build next, trade-offs, decisions |
+| Infra / Bicep / naming | Lead | `infra/main.bicep`, new modules, `azure.yaml` service wiring, naming conventions |
+| Grid Telemetry REST API | Backend | `src/GridTelemetry.Api` endpoints, models, OpenAPI, its tests |
+| MCP server / Foundry agent | Integration | `src/GridTools.Mcp`, Foundry Grid Maintenance Agent wiring, AI Gateway registration |
+| Deployment scripts / registration | DevOps | numbered scripts 10-12, `azd deploy`, VS Code publish walkthrough |
+| Docs / demo script | Docs | README.md, docs/TALK_TRACK.md, docs/DEMO_SCRIPT.md |
+| Code review | Lead | Review PRs, check quality, suggest improvements |
+| Testing | Backend | Write tests, find edge cases, verify fixes |
+| Scope & priorities | Lead | What to build next, trade-offs, decisions |
 | Session logging | Scribe | Automatic — never needs routing |
 | RAI review | Rai | Content safety, bias checks, credential detection, ethical review |
 
