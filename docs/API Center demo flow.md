@@ -1,8 +1,7 @@
-Prompt:
+# Azure API Center business value
 
-I am selling API Center to a utility company, being a Microsoft technical seller. I want to demo the API Center capabilities, and integration with Foundry.
 
-To effectively sell **Azure API Center** and **Microsoft Foundry** to a utility company, your narrative must bridge the gap between their rigid operational demands (security, legacy modernization, grid telemetry) and their desire for modern innovation (AI-driven predictive maintenance, smart grid agents, and customer service automation).
+To show the value of **Azure API Center** and **Microsoft Foundry** we must bridge the gap between utility's companies rigid operational demands (security, legacy modernization, grid telemetry) and their desire for modern innovation (AI-driven predictive maintenance, smart grid agents, and customer service automation).
 
 Utility companies face a massive "sprawl" problem. They have legacy SCADA APIs, customer billing APIs, grid telemetry endpoints, and a fast-growing number of AI/LLM models.
 
