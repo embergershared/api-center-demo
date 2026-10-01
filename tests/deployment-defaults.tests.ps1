@@ -61,8 +61,8 @@ function az {
         'provider show' {
             @{
                 registrationState = 'Registered'
-                resourceTypes = @('services', 'service', 'workspaces', 'components', 'accounts', 'redisEnterprise') |
-                    ForEach-Object { @{ resourceType = $_; locations = @('East US') } }
+                resourceTypes = @('services', 'service', 'workspaces', 'components', 'containerApps', 'accounts', 'redisEnterprise') |
+                    ForEach-Object { @{ resourceType = $_; locations = @(if ($_ -eq 'containerApps') { 'West US 3' } else { 'East US' }) } }
             } | ConvertTo-Json -Depth 5
         }
         'cognitiveservices model' {

@@ -1,7 +1,7 @@
 {
   "name": "api-center",
   "displayName": "API Center",
-  "description": "API inventory with a system-assigned identity; Free plan on creation.",
+  "description": "API inventory with a system-assigned identity; Standard plan by default.",
   "kind": "resource",
   "abbreviation": "apic",
   "featureFlag": null,

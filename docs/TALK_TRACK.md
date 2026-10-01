@@ -1,4 +1,4 @@
-# Talk Track — Azure API Center Demo (~25–30 min)
+# Talk Track — Azure API Center Demo (~30–35 min)
 
 ## 1. Set the story (2 min)
 Problem: as fleets electrify, API sprawl follows — vehicle telemetry, battery
@@ -36,14 +36,12 @@ environment, for example `apic-use-s3-apictr-demo`.
 Continuous synchronization also requires preview `apic-extension` 1.2.0b1 or
 later (`az extension add --name apic-extension --upgrade --allow-preview true`).
 
-The intended API Center plan is Standard. Bicep initially creates it with an
-explicit Free SKU. After the portal upgrade, set `API_CENTER_SKU` to `Standard`
-with `azd env set API_CENTER_SKU Standard` before provisioning again.
-After script 05 links the deployed Standard v2 APIM instance, upgrade the API
-Center in the portal under **Overview > Manage plan > Standard plan > Submit**
-and confirm the plan before the portal walkthrough. API Center Standard is
-available at no extra cost while that eligible APIM link remains; a Consumption
-APIM instance does not qualify. See the README for the upgrade references.
+The intended API Center plan is Standard and Bicep creates it with an explicit
+Standard SKU by default. Script 05 links the deployed Standard v2 APIM; verify
+the link before claiming the linked-APIM benefit. Standard may incur charges
+until the eligible link is established. An environment explicitly pinned to
+Free must be upgraded in the portal and then set `API_CENTER_SKU=Standard`
+before reprovisioning. See the README for upgrade references.
 
 | # | Script | What to show | Key line |
 |---|--------|--------------|----------|
@@ -70,6 +68,17 @@ entries' integration source before claiming successful synchronization. It
 prints the Foundry project and gateway endpoints but leaves billable calls to
 script 09 with explicit confirmation.
 
+Only after running script 05 and verifying its link can APIM synchronization
+also surface the public Microsoft Learn MCP
+passthrough exposed at `/learn-mcp/mcp` (the `MSLEARN_MCP_URL` output).
+Use this URL for the HTTP MCP server in VS Code, not `/learn-mcp/api/mcp`.
+The postprovision hook also creates an independent `managed-mslearn-mcp`
+entry titled **Microsoft Learn Docs (MCP passthrough, managed)**. Use that
+entry in the demo; synchronized duplicates may appear after linking. Its metadata and
+runtime URL are maintained by provisioning, not by APIM synchronization.
+Inspect the deployment's actual runtime URL before opening the test console;
+a stale `/learn-mcp/api/mcp` URL fails even when the gateway is healthy.
+
 ## 3. AI governance extension (5-10 min)
 
 Complete the one-time settings in [AI_GATEWAY.md](AI_GATEWAY.md) before the
@@ -91,8 +100,67 @@ customer data, or operational advice should be used.
 Show the optional `department` metadata field and the `NERC-CIP` compliance-tag
 choice in API Center. Emphasize these are inventory classifications, not proof
 of compliance. The linked APIM can synchronize the AI API into the catalog.
+If useful, also point out the synchronized `learn-mcp` asset as an example of
+governing a real third-party/public MCP server through the same APIM catalog
+flow without hardcoding any tool list.
 
-## 4. Wrap-up (5 min)
+## 4. Grid Maintenance Agent extension (5-7 min)
+
+This is where you connect the live implementation back to the **Smart Grid &
+Agent Initiative** narrative in [API Center demo flow.md](API%20Center%20demo%20flow.md).
+The point is no longer just "we could build a grid agent" — the repo now has
+real Container Apps-hosted pieces that make the story concrete without using real
+operational data.
+
+Start with the live Grid Telemetry API. Open `$GRID_API_APP_URL/openapi/v1.json`
+in the browser, then optionally show `/substations` and one
+`/substations/{id}/health` response.
+
+> "This is intentionally synthetic and deterministic. We're showing the shape
+> of a grid telemetry dependency and the governance flow around it, not live
+> outage data or switching instructions."
+
+Then pivot to the MCP server hosted at `GridTools.Mcp`. In the repo or script
+output, call out the two tool names: `list_substations` and
+`get_substation_health`.
+
+> "Instead of wiring the agent straight to raw REST calls, we expose those
+> capabilities as MCP tools. The agent gets bounded actions, and we still know
+> exactly what backend API those tools depend on."
+
+Register both assets into API Center:
+
+```powershell
+.\scripts\10-register-grid-telemetry-api.ps1
+.\scripts\11-register-mcp-server.ps1
+```
+
+Script 10 imports the live OpenAPI document into API Center as **Grid Telemetry
+API**. Script 11 registers **Grid Tools MCP Server** in the API Center MCP
+registry. Call out that `az apic mcp-server` is preview/evolving and currently
+depends on the preview `apic-extension`; if support is missing, the script
+fails with an install/upgrade message instead of masking the dependency.
+
+Finally, create the Foundry-side agent and tool attachment:
+
+```powershell
+.\scripts\12-grid-agent-demo.ps1 -WhatIf
+.\scripts\12-grid-agent-demo.ps1 -Confirm
+```
+
+> "This script creates a Foundry project connection that points at the MCP
+> server's `/mcp` endpoint, then creates the Grid Maintenance Agent with that
+> MCP tool attached. The governed runtime story still comes back through the
+> existing `utility-ai` API Center entry synchronized from APIM."
+
+If time permits, show the created agent in Foundry and the synchronized
+`utility-ai` entry in API Center side by side.
+
+> "So the narrative arc is complete: API Center catalogs the REST API and the
+> MCP server, Foundry hosts the agent experience, and APIM remains the governed
+> runtime surface for model traffic."
+
+## 5. Wrap-up (5 min)
 
 Tie back to governance/compliance value:
 - Single pane of glass for API inventory across fleet, depot, and energy/charging integrations.

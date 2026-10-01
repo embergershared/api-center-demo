@@ -45,9 +45,9 @@ if ($publisherEmail -notmatch '^[^@\s]+@[^@\s]+\.[^@\s]+$') {
 $root = Split-Path -Parent $PSScriptRoot
 & (Join-Path $PSScriptRoot 'build-catalog.ps1') -Check
 $catalog = Get-Content (Join-Path $root 'infra\modules\catalog.json') -Raw | ConvertFrom-Json
-$requiredModules = @('api-center', 'api-management', 'monitoring', 'foundry', 'managed-redis')
+$requiredModules = @('api-center', 'api-management', 'app-hosting', 'monitoring', 'foundry', 'managed-redis')
 if (@(Compare-Object $requiredModules @($catalog.modules.name)).Count -ne 0) {
-    throw 'The module catalog must contain exactly api-center, api-management, monitoring, foundry, and managed-redis.'
+    throw 'The module catalog must contain exactly api-center, api-management, app-hosting, monitoring, foundry, and managed-redis.'
 }
 $activeModules = @($catalog.modules | Where-Object { $profile -in $_.profiles })
 $providers = @($activeModules.providers | Sort-Object -Unique)
@@ -61,6 +61,7 @@ foreach ($provider in $providers) {
         'Microsoft.ApiManagement' { 'service' }
         'Microsoft.OperationalInsights' { 'workspaces' }
         'Microsoft.Insights' { 'components' }
+        'Microsoft.App' { 'containerApps' }
         'Microsoft.CognitiveServices' { 'accounts' }
         'Microsoft.Cache' { 'redisEnterprise' }
     }
@@ -68,10 +69,11 @@ foreach ($provider in $providers) {
         $resourceLocation = switch ($provider) {
             'Microsoft.CognitiveServices' { Get-DeploymentParameterValue $values 'aiLocation' }
             'Microsoft.Cache' { Get-DeploymentParameterValue $values 'cacheLocation' }
+            'Microsoft.App' { Get-DeploymentParameterValue $values 'appHostingLocation' }
             default { $location }
         }
         $null = Get-LocationCode $resourceLocation (Get-CoreCatalogPath 'location-codes.json')
-        $type = @($details.resourceTypes | Where-Object resourceType -EQ $resourceType)
+        $type = $details.resourceTypes | Where-Object resourceType -EQ $resourceType | Select-Object -First 1
         $supported = @($type.locations | ForEach-Object { ($_ -replace '\s', '').ToLowerInvariant() })
         if ($resourceLocation.ToLowerInvariant() -notin $supported) {
             throw "$provider/$resourceType does not support '$resourceLocation'. Supported regions: $($type.locations -join ', ')"

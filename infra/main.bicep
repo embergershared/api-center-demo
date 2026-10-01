@@ -17,13 +17,19 @@ param subscriptionCode string
 @allowed(['core', 'full'])
 param deploymentProfile string = 'full'
 
-@description('Use Standard after the explicit API Center plan upgrade; keep Free for initial provisioning.')
+@description('API Center defaults to Standard. Set Free explicitly only when its feature limits are acceptable.')
 @allowed(['Free', 'Standard'])
-param apiCenterSku string = 'Free'
+param apiCenterSku string = 'Standard'
 
 @description('Foundry/model region; defaults to the catalog region. Check model and quota availability before provisioning.')
 param aiLocation string = location
 param cacheLocation string = location
+@description('Container Apps environment/apps region. Defaults to West US 3 because some subscriptions have zero App Service VM quota (Basic B1, PremiumV4 P0V4) in East US and East US 2, the API Center/APIM region. Consumption Container Apps avoid that VM-family quota entirely. Must remain independent of `location` for those subscriptions.')
+param appHostingLocation string = 'westus3'
+@description('Set automatically by azd from SERVICE_GRID_TELEMETRY_API_RESOURCE_EXISTS. Preserves the currently deployed image across azd provision reruns.')
+param apiAppExists bool = false
+@description('Set automatically by azd from SERVICE_GRID_TOOLS_MCP_RESOURCE_EXISTS. Preserves the currently deployed image across azd provision reruns.')
+param mcpAppExists bool = false
 param chatModelName string = 'gpt-5.6-luna'
 param chatModelVersion string = '2026-07-09'
 @allowed(['GlobalStandard', 'Standard'])
@@ -70,6 +76,17 @@ var fullDemo = deploymentProfile == 'full'
 var tags = commonTags(repository, environmentName, deploymentProfile, createdOn, lastUpdatedOn, owner, costCenter)
 var resourceGroupName = azName(abbreviations.resourceGroup, locationCode, subscriptionCode, environmentName, '')
 var apiCenterName = azName(abbreviations.apiCenter, locationCode, subscriptionCode, environmentName, '')
+var containerAppsEnvironmentName = azName(abbreviations.containerAppsEnvironment, locationCodeFor(appHostingLocation), subscriptionCode, environmentName, '')
+var containerRegistryName = globalName(
+  abbreviations.containerRegistry,
+  locationCodeFor(appHostingLocation),
+  subscriptionCode,
+  environmentName,
+  take(uniqueString(subscription().id, environmentName, appHostingLocation), 4),
+  '',
+  24
+)
+var identityName = azName(abbreviations.managedIdentity, locationCodeFor(appHostingLocation), subscriptionCode, environmentName, '')
 // APIM owns a globally unique DNS label; retain a subscription-derived suffix.
 var apiManagementName = globalName(
   abbreviations.apiManagement,
@@ -79,6 +96,24 @@ var apiManagementName = globalName(
   take(uniqueString(subscription().id, environmentName, location), 6),
   '-',
   50
+)
+var gridApiAppName = globalName(
+  abbreviations.containerApp,
+  locationCodeFor(appHostingLocation),
+  subscriptionCode,
+  environmentName,
+  'api',
+  '-',
+  32
+)
+var gridMcpAppName = globalName(
+  abbreviations.containerApp,
+  locationCodeFor(appHostingLocation),
+  subscriptionCode,
+  environmentName,
+  'mcp',
+  '-',
+  32
 )
 
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2024-11-01' = {
@@ -128,6 +163,41 @@ module apiManagement './modules/api-management/main.bicep' = {
   }
 }
 
+module fleetApi './modules/api-management/fleet-api.bicep' = {
+  name: 'fleet-api'
+  scope: resourceGroup
+  params: {
+    apiManagementName: apiManagement.outputs.name
+  }
+}
+
+module mslearnMcp './modules/api-management/mslearn-mcp.bicep' = {
+  name: 'mslearn-mcp'
+  scope: resourceGroup
+  params: {
+    apiManagementName: apiManagement.outputs.name
+    apiCenterPortalHostname: apiCenter.outputs.portalHostname
+  }
+}
+
+module appHosting './modules/app-hosting/main.bicep' = {
+  name: 'app-hosting'
+  scope: resourceGroup
+  params: {
+    containerAppsEnvironmentName: containerAppsEnvironmentName
+    containerRegistryName: containerRegistryName
+    identityName: identityName
+    apiAppName: gridApiAppName
+    mcpAppName: gridMcpAppName
+    location: appHostingLocation
+    tags: tags
+    applicationInsightsConnectionString: monitoring.outputs.applicationInsightsConnectionString
+    logAnalyticsWorkspaceName: monitoring.outputs.logAnalyticsWorkspaceName
+    apiAppExists: apiAppExists
+    mcpAppExists: mcpAppExists
+  }
+}
+
 module foundry './modules/foundry/main.bicep' = if (fullDemo) {
   name: 'foundry'
   scope: resourceGroup
@@ -165,6 +235,10 @@ module aiGateway './modules/api-management/ai-gateway.bicep' = if (fullDemo) {
   params: {
     apiManagementName: apiManagement.outputs.name
     apiManagementPrincipalId: apiManagement.outputs.principalId
+    apiCenterPrincipalId: apiCenter.outputs.principalId
+    keyVaultName: globalName(abbreviations.keyVault, locationCode, subscriptionCode, environmentName, take(uniqueString(subscription().id, environmentName, location), 3), '-', 24)
+    location: location
+    tags: tags
     foundryName: foundry!.outputs.name
     projectPrincipalId: foundry!.outputs.projectPrincipalId
     redisName: redis!.outputs.name
@@ -186,6 +260,14 @@ output APIC_LOCATION string = location
 output APIM_SERVICE string = apiManagement.outputs.name
 output APIM_RESOURCE_ID string = apiManagement.outputs.id
 output APIM_GATEWAY_URL string = apiManagement.outputs.gatewayUrl
+output MSLEARN_MCP_URL string = '${apiManagement.outputs.gatewayUrl}/${mslearnMcp.outputs.path}/mcp'
+output GRID_API_APP_URL string = appHosting.outputs.apiAppUrl
+output GRID_API_APP_NAME string = appHosting.outputs.apiAppName
+output GRID_MCP_APP_URL string = appHosting.outputs.mcpAppUrl
+output GRID_MCP_APP_NAME string = appHosting.outputs.mcpAppName
+output AZURE_APP_HOSTING_LOCATION string = appHostingLocation
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = appHosting.outputs.containerRegistryLoginServer
+output AZURE_CONTAINER_ENVIRONMENT_NAME string = appHosting.outputs.containerAppsEnvironmentName
 output AZURE_LOG_ANALYTICS_WORKSPACE_ID string = monitoring.outputs.logAnalyticsWorkspaceId
 output AZURE_APPLICATION_INSIGHTS_NAME string = monitoring.outputs.applicationInsightsName
 output AZURE_AI_FOUNDRY_NAME string = fullDemo ? foundry!.outputs.name : ''
@@ -196,6 +278,7 @@ output AZURE_OPENAI_ENDPOINT string = fullDemo ? foundry!.outputs.openAIEndpoint
 output AZURE_OPENAI_CHAT_DEPLOYMENT string = fullDemo ? foundry!.outputs.chatDeploymentName : ''
 output AZURE_OPENAI_EMBEDDING_DEPLOYMENT string = fullDemo ? foundry!.outputs.embeddingDeploymentName : ''
 output AZURE_MANAGED_REDIS_NAME string = fullDemo ? redis!.outputs.name : ''
+output MSLEARN_MCP_GATEWAY_URL string = '${apiManagement.outputs.gatewayUrl}/${mslearnMcp.outputs.path}'
 output AI_GATEWAY_URL string = fullDemo ? '${apiManagement.outputs.gatewayUrl}/ai/chat/completions' : ''
 output AI_GATEWAY_API_ID string = fullDemo ? aiGateway!.outputs.apiName : ''
 output AI_GATEWAY_SUBSCRIPTION_ID string = fullDemo ? aiGateway!.outputs.subscriptionName : ''

@@ -16,6 +16,65 @@ logger and API diagnostics, TLS external cache, chat and embeddings backends,
 and the HTTPS `/ai/chat/completions` API with an API-scoped demo subscription.
 The core profile remains an uninstrumented gateway with monitoring resources.
 
+Both deployment profiles also run `mslearn-mcp.bicep`. It adds a governed APIM
+passthrough MCP API with base path `/learn-mcp` and client endpoint
+`/learn-mcp/mcp` that fronts Microsoft Learn's public,
+read-only documentation MCP endpoint. Because it is a normal APIM `apis`
+resource, the existing APIM↔API Center integration catalogs it automatically;
+no extra API Center registration script is required.
+Its streamable `mcpProperties.endpoints` is a `message`-keyed object: APIM's
+runtime expects `Dictionary<string, McpEndpointContract>` even though the
+[2025-09-01-preview template reference](https://learn.microsoft.com/azure/templates/microsoft.apimanagement/2025-09-01-preview/service/apis)
+currently describes an array. The Bicep `any()` escape is limited to this
+property; the compiled ARM shape is checked in `tests/run-tests.ps1`.
+
+The backend base URL is `https://learn.microsoft.com/api`, and the message
+path is `/mcp`. APIM appends that path when forwarding requests, reaching
+`https://learn.microsoft.com/api/mcp`. Including `/mcp` in both the backend
+base and the message path produces an upstream 404.
+
+For VS Code, use an HTTP MCP server with URL
+`https://<apim-service-name>.azure-api.net/learn-mcp/mcp`
+(also exported as `MSLEARN_MCP_URL`). Do not use `/learn-mcp/api/mcp`:
+`/api` belongs to the upstream URL, not the gateway route. Update any saved
+server URL and restart that server in VS Code after deploying this change.
+If the server was added through API Center, inspect its deployment's
+`server.runtimeUri`, not just the APIM API. The portal test console uses that
+catalog URL. It must end in `/learn-mcp/mcp`. A working gateway and CORS
+policy do not repair a stale catalog URL.
+
+An errored APIM integration can leave the old `/learn-mcp/api/mcp` URL in
+the catalog. Integration-owned runtime URLs cannot be changed independently:
+an update may return successfully while leaving the old value unchanged.
+Read back the deployment after any repair and initialize MCP using that exact
+URL and the portal's Origin header.
+
+`azd provision` now runs `scripts/provision-catalog.ps1` after deployment to
+configure both synchronization and independent catalog entries. Duplicate
+synchronized copies are intentional. Use `managed-mslearn-mcp` for portal
+testing: its runtime URL is explicitly managed and checked on every run.
+`managed-fleet-vehicle` includes the Fleet v2 specification, and
+`managed-utility-ai` includes the AI specification in the `full` profile.
+The `core` profile omits Utility AI because it does not deploy the AI gateway.
+The independent records use a separate `managed-apim` environment and no
+`apiSourceId`; Azure-generated synchronization records cannot take ownership.
+Provisioning never deletes previously restored entries.
+
+The hook creates a missing integration, checks an existing integration's source,
+and reports integration errors rather than treating them as successful sync.
+It does not unlink/recreate a failing integration, which would delete its
+catalog records. Back up linked definitions and metadata before any manual
+unlink. Removing the link can end the linked-APIM Standard-plan pricing benefit.
+
+`mslearn-mcp-policy.xml` enables browser testing only from the API Center
+portal's HTTPS origin. The `apiCenterPortalHostname` parameter is wired to
+the API Center resource's actual `portalHostname` output, not a hard-coded
+environment name. CORS runs before inherited inbound policies, permits
+GET/POST/DELETE and MCP request headers, and exposes the session/protocol
+response headers without enabling browser credentials or wildcard origins.
+For a standalone deployment of `mslearn-mcp.bicep`, supply both
+`apiManagementName` and `apiCenterPortalHostname`.
+
 `openapi.json` restricts demo calls to bounded, non-streaming text completions.
 `ai-policy.xml` validates this schema, removes client keys before forwarding,
 partitions the semantic cache by subscription/deployment/token budget, applies

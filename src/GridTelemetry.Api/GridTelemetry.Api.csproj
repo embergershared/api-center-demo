@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
     <UserSecretsId>462b1c61-4880-4303-98d8-765851d9a033</UserSecretsId>
   </PropertyGroup>
 

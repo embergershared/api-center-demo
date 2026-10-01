@@ -1,0 +1,15 @@
+{
+  "name": "app-hosting",
+  "displayName": "Container Apps hosting",
+  "description": "Consumption-only Container Apps environment plus two container apps for GridTelemetry.Api and GridTools.Mcp.",
+  "kind": "composite",
+  "abbreviation": "cae",
+  "additionalAbbreviations": ["ca"],
+  "featureFlag": null,
+  "profiles": ["core", "full"],
+  "providers": ["Microsoft.App"],
+  "privateEndpoints": [],
+  "roles": [],
+  "nameRule": "regional",
+  "preflight": { "checks": [], "requiresOperatorPrincipals": false }
+}

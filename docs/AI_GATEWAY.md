@@ -8,7 +8,7 @@ Set overrides with `azd env set NAME value` before preview/provisioning.
 | Setting | Default | Meaning |
 |---|---|---|
 | `DEPLOYMENT_PROFILE` | `full` | `core` excludes the new AI layer |
-| `API_CENTER_SKU` | `Free` | Set `Standard` after the explicit portal upgrade to preserve the plan on redeployment |
+| `API_CENTER_SKU` | `Standard` | Set `Free` explicitly to use the limited Free plan; Standard can incur charges until an eligible APIM link is established |
 | `AI_LOCATION` | seeded from `AZURE_LOCATION` | Foundry and both models |
 | `CACHE_LOCATION` | seeded from `AZURE_LOCATION` | Managed Redis |
 | `CHAT_MODEL_NAME` / `CHAT_MODEL_VERSION` | `gpt-5.6-luna` / `2026-07-09` | Explicit model/version, no automatic upgrade |
@@ -74,9 +74,10 @@ azd env set CHAT_MODEL_VERSION 2026-07-09
 
 ## One-time portal steps
 
-1. Link APIM using script 05, then upgrade API Center to Standard as described
-   in the README. The link provides the Standard entitlement. After upgrading,
-   run `azd env set API_CENTER_SKU Standard` to preserve the plan on redeployment.
+1. API Center is provisioned on Standard by default. Link APIM using script 05
+   to obtain the eligible linked-APIM benefit; Standard may be billed until
+   that link is established. Only an environment explicitly pinned to Free
+   needs the portal upgrade and `azd env set API_CENTER_SKU Standard` afterward.
 2. Open the modern Foundry project identified by `AZURE_AI_PROJECT_ENDPOINT`.
    An administrator must assign demo operators appropriate **Azure AI User**
    access to the account/project. Generic infrastructure Contributor is not a
@@ -87,9 +88,16 @@ azd env set CHAT_MODEL_VERSION 2026-07-09
    identity, Monitoring Metrics Publisher role, logger, and API diagnostic
    `metrics: true`. See [the required custom-metrics setting](https://learn.microsoft.com/azure/api-management/api-management-howto-app-insights#emit-custom-metrics).
 4. In APIM **Subscriptions**, use `utility-ai-demo`, scoped to the `utility-ai`
-   API. Copy its key privately and paste it only into the secure prompt in
-   script 09. Do not commit keys, put them in query strings, print them in
-   terminal commands, or use an all-APIs admin subscription for the demo.
+   API. For script 09, copy its key privately and paste it only into the secure
+   prompt. For the API Center portal's **Try this API**, `azd provision` also
+   stores the generated subscription key in a demo Key Vault as
+   `utility-ai-subscription-key` and grants API Center secret-reader access.
+   Add an API Key authorization configuration with header
+   `Ocp-Apim-Subscription-Key`, attach it to the synchronized API version,
+   and grant the presenter credential access in the API Center portal; the
+   published ARM/CLI API does not provision those three UI settings.
+   Do not commit keys, put them in query strings, print them in terminal
+   commands, or use an all-APIs admin subscription for the demo.
 
 The API's HTTP endpoint is `AI_GATEWAY_URL`; the actual APIM host comes from
 deployment outputs. Model and cache keys are not required by the caller.

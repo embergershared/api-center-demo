@@ -5,6 +5,17 @@ infra:
   provider: bicep
   path: infra
   module: main
+services:
+  grid-telemetry-api:
+    project: src/GridTelemetry.Api
+    host: containerapp
+    language: dotnet
+    resourceName: ${GRID_API_APP_NAME}
+  grid-tools-mcp:
+    project: src/GridTools.Mcp
+    host: containerapp
+    language: dotnet
+    resourceName: ${GRID_MCP_APP_NAME}
 hooks:
   preprovision:
     shell: pwsh
@@ -12,3 +23,7 @@ hooks:
     run: |
       ./scripts/set-deployment-tags.ps1
       ./scripts/preflight.ps1
+  postprovision:
+    shell: pwsh
+    continueOnError: false
+    run: ./scripts/provision-catalog.ps1

@@ -1,0 +1,91 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Grid Telemetry API",
+    "version": "1.0.0",
+    "description": "Demo-safe synthetic substation inventory and health snapshots for the Grid Maintenance Agent scenario. Mirrors the routes of src/GridTelemetry.Api. No real operational, outage, switching, or field-safety data."
+  },
+  "tags": [
+    { "name": "Grid Telemetry" }
+  ],
+  "paths": {
+    "/substations": {
+      "get": {
+        "tags": ["Grid Telemetry"],
+        "summary": "Lists synthetic substations.",
+        "description": "Returns demo-safe synthetic substations for the Grid Maintenance Agent scenario.",
+        "operationId": "GetSubstations",
+        "responses": {
+          "200": {
+            "description": "The synthetic substations.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Substation" }
+                }
+              }
+            }
+          },
+          "500": { "description": "Unexpected server error." }
+        }
+      }
+    },
+    "/substations/{id}/health": {
+      "get": {
+        "tags": ["Grid Telemetry"],
+        "summary": "Gets synthetic substation health details.",
+        "description": "Returns a stable synthetic health snapshot and open maintenance flags for a single substation.",
+        "operationId": "GetSubstationHealth",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Substation identifier, for example A12.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The synthetic health snapshot.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SubstationHealth" }
+              }
+            }
+          },
+          "404": { "description": "Substation not found." }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Substation": {
+        "type": "object",
+        "required": ["id", "name", "region"],
+        "properties": {
+          "id": { "type": "string", "example": "A12" },
+          "name": { "type": "string", "example": "Substation A12" },
+          "region": { "type": "string", "example": "North Valley" }
+        }
+      },
+      "SubstationHealth": {
+        "type": "object",
+        "required": ["id", "name", "region", "healthScore", "lastInspected", "openMaintenanceFlags"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "region": { "type": "string" },
+          "healthScore": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "lastInspected": { "type": "string", "format": "date" },
+          "openMaintenanceFlags": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

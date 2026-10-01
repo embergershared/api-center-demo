@@ -2,6 +2,12 @@ targetScope = 'resourceGroup'
 
 param apiManagementName string
 param apiManagementPrincipalId string
+param apiCenterPrincipalId string
+@minLength(3)
+@maxLength(24)
+param keyVaultName string
+param location string
+param tags object
 param foundryName string
 param projectPrincipalId string
 param redisName string
@@ -202,6 +208,42 @@ resource demoSubscription 'Microsoft.ApiManagement/service/subscriptions@2024-05
     scope: api.id
     state: 'active'
     allowTracing: false
+  }
+}
+
+resource demoKeyVault 'Microsoft.KeyVault/vaults@2024-11-01' = {
+  name: keyVaultName
+  location: location
+  tags: tags
+  properties: {
+    tenantId: tenant().tenantId
+    sku: {
+      family: 'A'
+      name: 'standard'
+    }
+    enableRbacAuthorization: true
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 7
+    publicNetworkAccess: 'Enabled'
+  }
+}
+
+var keyVaultSecretsUser = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
+resource apiCenterSecretReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(demoKeyVault.id, apiCenterPrincipalId, keyVaultSecretsUser)
+  scope: demoKeyVault
+  properties: {
+    principalId: apiCenterPrincipalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: keyVaultSecretsUser
+  }
+}
+
+resource demoSubscriptionSecret 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = {
+  parent: demoKeyVault
+  name: 'utility-ai-subscription-key'
+  properties: {
+    value: demoSubscription.listSecrets().primaryKey
   }
 }
 

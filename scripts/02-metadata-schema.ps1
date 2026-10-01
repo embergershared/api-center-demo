@@ -25,9 +25,10 @@ function Set-DemoMetadata {
         -FailureMessage "Failed to create $Name metadata" | Out-Host
 }
 
-Write-Host "==> Creating custom metadata: lifecycleStage (enum, required on APIs)"
+Write-Host "==> Creating custom metadata: lifecycleStage (enum, optional on APIs)"
 $lifecycleSchema = '{
     "type": "string",
+    "title": "Lifecycle stage",
     "oneOf": [
       {"const": "design"},
       {"const": "development"},
@@ -38,14 +39,15 @@ $lifecycleSchema = '{
       {"const": "retired"}
     ]
   }'
-Set-DemoMetadata -Name 'lifecycleStage' -Schema $lifecycleSchema -Required $true
+Set-DemoMetadata -Name 'lifecycleStage' -Schema $lifecycleSchema -Required $false
 
-Write-Host "==> Creating custom metadata: businessOwner (string, required on APIs)"
-Set-DemoMetadata -Name 'businessOwner' -Schema '{"type": "string"}' -Required $true
+Write-Host "==> Creating custom metadata: businessOwner (string, optional on APIs)"
+Set-DemoMetadata -Name 'businessOwner' -Schema '{"type": "string", "title": "Business owner"}' -Required $false
 
 Write-Host "==> Creating custom metadata: complianceTag (enum, multi-select, on APIs)"
 $complianceSchema = '{
     "type": "array",
+    "title": "Compliance tag",
     "items": {
       "type": "string",
       "oneOf": [
@@ -61,7 +63,7 @@ $complianceSchema = '{
 Set-DemoMetadata -Name 'complianceTag' -Schema $complianceSchema -Required $false
 
 Write-Host "==> Creating custom metadata: department (optional on APIs)"
-Set-DemoMetadata -Name 'department' -Schema '{"type": "string"}' -Required $false
+Set-DemoMetadata -Name 'department' -Schema '{"type": "string", "title": "Department"}' -Required $false
 
 Write-Host "==> Metadata schema created. These fields will show up as filter facets in the portal."
 Write-Host "NERC-CIP is a catalog classification only, not evidence of regulatory compliance."

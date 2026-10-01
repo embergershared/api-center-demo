@@ -5,7 +5,7 @@
     {
       "name": "api-center",
       "displayName": "API Center",
-      "description": "API inventory with a system-assigned identity; Free plan on creation.",
+      "description": "API inventory with a system-assigned identity; Standard plan by default.",
       "kind": "resource",
       "abbreviation": "apic",
       "additionalAbbreviations": [],
@@ -65,6 +65,32 @@
         "checks": [
           "apiManagementRegion"
         ],
+        "requiresOperatorPrincipals": false
+      }
+    },
+    {
+      "name": "app-hosting",
+      "displayName": "Container Apps hosting",
+      "description": "Consumption-only Container Apps environment plus two container apps for GridTelemetry.Api and GridTools.Mcp.",
+      "kind": "composite",
+      "abbreviation": "cae",
+      "additionalAbbreviations": [
+        "ca"
+      ],
+      "featureFlag": null,
+      "profiles": [
+        "core",
+        "full"
+      ],
+      "providers": [
+        "Microsoft.App"
+      ],
+      "nameRule": "regional",
+      "path": "infra/modules/app-hosting/main.bicep",
+      "privateEndpoints": [],
+      "roles": [],
+      "preflight": {
+        "checks": [],
         "requiresOperatorPrincipals": false
       }
     },

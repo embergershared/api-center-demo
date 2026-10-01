@@ -35,6 +35,6 @@ Invoke-DemoAz -Arguments @(
 Write-Host '==> Synchronization configured; API inventory updates are asynchronous.'
 Write-Host '    In API Center, inspect apim-integration and confirm the imported APIs came from this APIM instance.'
 Write-Host '    For the full profile, run script 08 to check for the Utility AI demonstration catalog entry.'
-Write-Host '==> Plan handoff: after confirming the eligible APIM link, use Overview > Manage plan to select Standard.'
-Write-Host '    After the portal upgrade succeeds, run: azd env set API_CENTER_SKU Standard'
+Write-Host '==> API Center defaults to Standard. Verify the plan in Overview > Manage plan.'
+Write-Host '    If this environment explicitly uses Free, upgrade in the portal after linking, then run: azd env set API_CENTER_SKU Standard'
 Write-Host '    Integration creation alone does not confirm synchronization completion or a plan upgrade.'

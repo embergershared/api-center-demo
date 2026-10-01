@@ -1,0 +1,38 @@
+<policies>
+    <inbound>
+        <cors allow-credentials="false" terminate-unmatched-request="true">
+            <allowed-origins>
+                <origin>{{portal-origin}}</origin>
+            </allowed-origins>
+            <allowed-methods preflight-result-max-age="300">
+                <method>GET</method>
+                <method>POST</method>
+                <method>DELETE</method>
+            </allowed-methods>
+            <allowed-headers>
+                <header>Accept</header>
+                <header>Content-Type</header>
+                <header>Mcp-Session-Id</header>
+                <header>MCP-Protocol-Version</header>
+                <header>Last-Event-ID</header>
+                <header>MCP-Method</header>
+                <header>MCP-Name</header>
+            </allowed-headers>
+            <expose-headers>
+                <header>Mcp-Session-Id</header>
+                <header>MCP-Protocol-Version</header>
+            </expose-headers>
+        </cors>
+        <base />
+        <set-backend-service backend-id="mslearn-mcp" />
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

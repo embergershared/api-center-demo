@@ -23,6 +23,7 @@ func commonTags(
       environment: environmentName
       profile: deploymentProfile
       'managed-by': 'azd'
+      SecurityControl: 'Ignore'
       'created-on': createdOn
       'last-updated-on': lastUpdatedOn
     },

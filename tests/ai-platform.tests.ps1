@@ -42,13 +42,30 @@ Assert-True ($cacheConnection.properties.connectionString -match 'listKeys' -and
 $logger = @($gatewayResources | Where-Object type -EQ 'Microsoft.ApiManagement/service/loggers')[0]
 Assert-True ($logger.properties.credentials.identityClientId -eq 'SystemAssigned') 'Telemetry must use managed identity.'
 $roles = @($gatewayResources | Where-Object type -EQ 'Microsoft.Authorization/roleAssignments')
-Assert-True ($roles.Count -eq 3 -and @($roles | Where-Object { $_.scope -match 'Microsoft.CognitiveServices/accounts' }).Count -eq 2 -and
-    @($roles | Where-Object { $_.scope -match 'Microsoft.Insights/components' }).Count -eq 1) 'Gateway RBAC must be scoped to model and telemetry resources.'
+Assert-True ($roles.Count -eq 4 -and @($roles | Where-Object { $_.scope -match 'Microsoft.CognitiveServices/accounts' }).Count -eq 2 -and
+    @($roles | Where-Object { $_.scope -match 'Microsoft.Insights/components' }).Count -eq 1 -and
+    @($roles | Where-Object { $_.scope -match 'Microsoft.KeyVault/vaults' }).Count -eq 1) 'Gateway RBAC must be scoped to model, telemetry, and vault resources.'
 $api = @($gatewayResources | Where-Object type -EQ 'Microsoft.ApiManagement/service/apis')[0]
 Assert-True ($api.properties.subscriptionRequired -and ($api.properties.protocols -join ',') -eq 'https') 'AI API must require a subscription over HTTPS.'
 $subscription = @($gatewayResources | Where-Object type -EQ 'Microsoft.ApiManagement/service/subscriptions')[0]
 Assert-True ($subscription.properties.scope -match 'Microsoft.ApiManagement/service/apis' -and
     -not $subscription.properties.allowTracing -and -not $subscription.properties.Contains('primaryKey')) 'Demo subscription must be API-scoped with generated keys and tracing disabled.'
+$vault = @($gatewayResources | Where-Object type -EQ 'Microsoft.KeyVault/vaults')[0]
+$vaultSecret = @($gatewayResources | Where-Object type -EQ 'Microsoft.KeyVault/vaults/secrets')[0]
+$secretReader = @($roles | Where-Object { $_.scope -match 'Microsoft.KeyVault/vaults' })
+Assert-True ($vault.tags -eq "[parameters('tags')]" -and
+    $vault.properties.enableRbacAuthorization -and $vault.properties.enableSoftDelete -and
+    $vault.properties.publicNetworkAccess -eq 'Enabled') 'Demo vault must use RBAC and soft deletion.'
+Assert-True ($vaultSecret.properties.value -match 'listSecrets' -and
+    $vaultSecret.properties.value -match 'primaryKey' -and
+    $vaultSecret.name -match 'utility-ai-subscription-key') 'Demo key must flow directly from API-scoped APIM subscription into Key Vault.'
+Assert-True ($secretReader.Count -eq 1 -and
+    $secretReader[0].properties.principalId -eq "[parameters('apiCenterPrincipalId')]" -and
+    $secretReader[0].properties.roleDefinitionId -eq "[variables('keyVaultSecretsUser')]" -and
+    $resources.aiGateway.properties.template.variables.keyVaultSecretsUser -match '4633458b-17de-408a-b874-0445c86b69e6') 'Only API Center should receive vault secret-reader access.'
+Assert-True ($resources.aiGateway.properties.parameters.apiCenterPrincipalId.value -match 'outputs.principalId' -and
+    $resources.aiGateway.properties.parameters.keyVaultName.value -match 'globalName' -and
+    $resources.aiGateway.properties.parameters.tags.value -eq "[variables('tags')]") 'Gateway must receive the API Center identity and convention-named vault.'
 $diagnostic = @($gatewayResources | Where-Object type -EQ 'Microsoft.ApiManagement/service/apis/diagnostics')[0]
 Assert-True ($diagnostic.properties.metrics -and -not $diagnostic.properties.logClientIp) 'Enable metrics without client IP logging.'
 foreach ($side in @('frontend', 'backend')) {

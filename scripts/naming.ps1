@@ -210,6 +210,7 @@ function Get-CommonTags {
         environment       = $EnvironmentName
         profile           = $DeploymentProfile
         'managed-by'      = 'azd'
+        SecurityControl   = 'Ignore'
         'created-on'      = $CreatedOn
         'last-updated-on' = $LastUpdatedOn
     }

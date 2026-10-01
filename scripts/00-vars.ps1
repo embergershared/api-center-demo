@@ -8,7 +8,9 @@ Assert-DeploymentSubscription $subscriptionId
 $deploymentEnvironmentName = Get-DeploymentValue $deploymentValues 'AZURE_ENV_NAME'
 foreach ($key in @('AZURE_RESOURCE_GROUP', 'APIC_SERVICE',
     'APIC_RESOURCE_ID', 'APIC_PRINCIPAL_ID', 'APIC_LOCATION',
-    'APIM_SERVICE', 'APIM_RESOURCE_ID', 'APIM_GATEWAY_URL')) {
+    'APIM_SERVICE', 'APIM_RESOURCE_ID', 'APIM_GATEWAY_URL',
+    'GRID_API_APP_URL', 'GRID_API_APP_NAME',
+    'GRID_MCP_APP_URL', 'GRID_MCP_APP_NAME')) {
     $value = Get-DeploymentValue $deploymentValues $key
     [Environment]::SetEnvironmentVariable($key, $value, 'Process')
 }

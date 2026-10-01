@@ -39,8 +39,10 @@ bodies, headers, and client IP logging are disabled for the AI API.
 | Name | Notes |
 |---|---|
 | `logAnalyticsWorkspaceId` | Wire into every module that emits diagnostics |
+| `logAnalyticsWorkspaceName` | Used by the Container Apps environment's `listKeys()`-based log wiring |
 | `applicationInsightsId` | |
 | `applicationInsightsName` | |
+| `applicationInsightsConnectionString` | Pass into app-level telemetry settings without exporting it from the root template |
 
 ## Wire-up
 

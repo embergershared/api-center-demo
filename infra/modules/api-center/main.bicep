@@ -6,7 +6,7 @@ param name string
 param location string
 param tags object
 @allowed(['Free', 'Standard'])
-param skuName string = 'Free'
+param skuName string = 'Standard'
 
 resource service 'Microsoft.ApiCenter/services@2024-06-01-preview' = {
   name: name
@@ -26,3 +26,6 @@ resource service 'Microsoft.ApiCenter/services@2024-06-01-preview' = {
 output id string = service.id
 output name string = service.name
 output principalId string = service.identity.principalId
+// The live API returns this read-only property, but the published schema omits it.
+#disable-next-line BCP053
+output portalHostname string = service.properties.portalHostname
