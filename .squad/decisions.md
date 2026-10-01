@@ -72,3 +72,10 @@ Serialized field names use ASP.NET Core `System.Text.Json` default camelCase exa
 - All meaningful changes require team consensus
 - Document architectural decisions here
 - Keep history focused on work, decisions focused on direction
+
+## Active Decisions (continued)
+
+### 2026-09-30: APIM MCP endpoints use a dictionary at runtime
+**By:** Lead
+**What:** Keep `service/apis@2025-09-01-preview`, but emit a `message`-keyed object for `mcpProperties.endpoints` in the Learn MCP passthrough module; apply `any()` only to that property and assert the compiled ARM shape in tests.
+**Why:** APIM rejected an array with `Cannot deserialize the current JSON array into Dictionary<string,McpEndpointContract>`, while the published 2025-09-01-preview Bicep/REST docs still incorrectly specify an array. Local compilation cannot prove live service acceptance.

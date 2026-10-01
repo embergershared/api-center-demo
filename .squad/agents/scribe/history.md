@@ -14,3 +14,5 @@ Agent Scribe initialized and ready for work.
 ## Learnings
 
 Initial setup complete.
+
+📌 Team update (2026-09-30T01:19:43-04:00): Recorded Lead's APIM Microsoft Learn MCP endpoint-shape fix, local lint/test verification, and pending live provisioning validation; merged and cleared one decision-inbox entry without changing other decisions.
