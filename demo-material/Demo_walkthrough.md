@@ -339,7 +339,7 @@ runtime URL.
    Entra audience.
 3. Go to **Build** > **Agents** > **Create agent**:
    - Name: `azure-learn-managed`
-   - Model: `chat`
+   - Model: `gpt-chat-latest`
    - Instructions: `Answer Azure questions using the Microsoft Learn tool. Cite the docs.`
    - **Tools** > **Add** > select the Learn MCP tool you just connected.
 4. In the **Playground**, ask:

@@ -301,11 +301,12 @@ with the working Grid Maintenance Agent demo assets:
   APIs via `az rest` to create or update the **Grid Maintenance Agent**, attach
   the remote MCP tool connection, and verify that the governed runtime remains
   the existing synchronized `utility-ai` catalog entry instead of a duplicate
-  API Center record.
+  API Center record. The agent uses the `gpt-chat-latest` model deployment.
 - `13-learn-agent-demo.ps1` creates or repairs the **azure-learn-managed**
   agent and its Microsoft Learn MCP project connection. The APIM passthrough is
   public and read-only, so the connection is created through the supported
-  `azd ai connection create` command with `--auth-type none`.
+  `azd ai connection create` command with `--auth-type none`. The agent uses
+  the `gpt-chat-latest` model deployment.
   Do not configure Microsoft Entra or OAuth authentication for this endpoint:
   those modes trigger token acquisition and require an audience that this
   unauthenticated MCP server neither publishes nor validates.

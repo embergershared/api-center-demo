@@ -47,6 +47,8 @@ $learnAgentScript = Get-Content (Join-Path $root 'scripts\13-learn-agent-demo.ps
 Assert-True ($learnAgentScript -match 'azd ai connection create \$connectionName' -and
     $learnAgentScript -match "\`$agentName\s*=\s*'azure-learn-managed'" -and
     $learnAgentScript -match "\`$legacyAgentName\s*=\s*'grid-maintenance-helper'" -and
+    $learnAgentScript -match "\`$agentModel\s*=\s*'gpt-chat-latest'" -and
+    $learnAgentScript -match 'model\s*=\s*\$agentModel' -and
     $learnAgentScript -match '--kind remote-tool' -and
     $learnAgentScript -match '--target \$mcpToolUrl' -and
     $learnAgentScript -match '--auth-type none' -and
@@ -58,7 +60,9 @@ Assert-True ($learnAgentScript -match 'azd ai connection create \$connectionName
     $learnAgentScript -notmatch '--audience' -and
     $learnAgentScript -notmatch '&force=true') 'Learn MCP must use the supported azd unauthenticated RemoteTool connection without an audience or shell-sensitive query separators.'
 $gridAgentScript = Get-Content (Join-Path $root 'scripts\12-grid-agent-demo.ps1') -Raw
-Assert-True ($gridAgentScript -notmatch '&force=true') 'Grid agent deletion must not pass an ampersand query separator through the Windows az.cmd wrapper.'
+Assert-True ($gridAgentScript -match "\`$agentModel\s*=\s*'gpt-chat-latest'" -and
+    $gridAgentScript -match 'model\s*=\s*\$agentModel' -and
+    $gridAgentScript -notmatch '&force=true') 'Grid agent must use gpt-chat-latest and avoid passing an ampersand query separator through the Windows az.cmd wrapper.'
 foreach ($service in @('GridTelemetry.Api', 'GridTools.Mcp')) {
     $project = Get-Content (Join-Path $root "src\$service\$service.csproj") -Raw
     Assert-True ($project -match '<EnableSdkContainerSupport>true</EnableSdkContainerSupport>') "$service must enable SDK container support for azd deploy."

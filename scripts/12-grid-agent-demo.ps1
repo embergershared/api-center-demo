@@ -60,7 +60,7 @@ $toolConnectionName = 'grid-tools-mcp-conn'
 $projectEndpoint = Get-DeploymentValue $values 'AZURE_AI_PROJECT_ENDPOINT'
 $projectName = Get-DeploymentValue $values 'AZURE_AI_PROJECT_NAME'
 $foundryAccountName = Get-DeploymentValue $values 'AZURE_AI_FOUNDRY_NAME'
-$chatDeployment = Get-DeploymentValue $values 'AZURE_OPENAI_CHAT_DEPLOYMENT'
+$agentModel = 'gpt-chat-latest'
 $gridMcpAppUrl = Get-DeploymentValue $values 'GRID_MCP_APP_URL'
 $mcpToolUrl = "$($gridMcpAppUrl.TrimEnd('/'))/mcp"
 $subscriptionId = Get-DeploymentValue $values 'AZURE_SUBSCRIPTION_ID'
@@ -105,7 +105,7 @@ $agentBody = @{
     name = $agentName
     definition = @{
         kind = 'prompt'
-        model = $chatDeployment
+        model = $agentModel
         instructions = @'
 You are the fictional Grid Maintenance Agent for a software demonstration.
 Use the available MCP tools to look up synthetic substation status and summarize maintenance history in a concise, non-operational way.

@@ -58,7 +58,7 @@ $connectionName = 'learn-docs-mcp-conn'
 $projectEndpoint = Get-DeploymentValue $values 'AZURE_AI_PROJECT_ENDPOINT'
 $projectName = Get-DeploymentValue $values 'AZURE_AI_PROJECT_NAME'
 $foundryAccountName = Get-DeploymentValue $values 'AZURE_AI_FOUNDRY_NAME'
-$chatDeployment = Get-DeploymentValue $values 'AZURE_OPENAI_CHAT_DEPLOYMENT'
+$agentModel = 'gpt-chat-latest'
 $mcpToolUrl = Get-DeploymentValue $values 'MSLEARN_MCP_URL'
 $subscriptionId = Get-DeploymentValue $values 'AZURE_SUBSCRIPTION_ID'
 $resourceGroup = Get-DeploymentValue $values 'AZURE_RESOURCE_GROUP'
@@ -103,7 +103,7 @@ $agentBody = @{
     name = $agentName
     definition = @{
         kind = 'prompt'
-        model = $chatDeployment
+        model = $agentModel
         instructions = 'Answer Azure questions using the Microsoft Learn MCP tool. Cite the Microsoft Learn documentation used in the answer.'
         tools = @(
             @{
