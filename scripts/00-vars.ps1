@@ -1,57 +1,36 @@
-# 00-vars.ps1 — shared variables for the API Center demo.
-# Dot-source this at the top of every script: `. ./00-vars.ps1`
+# Load provisioned outputs, never reconstruct service names from user initials.
+# $ErrorActionPreference = 'Stop'
+# . (Join-Path $PSScriptRoot 'deployment-context.ps1')
 
-# ---- EDIT THESE ----
-$env:RESOURCE_GROUP      = "rg-apic-demo-eus01"
-$env:LOCATION            = "eastus"
-$env:APIM_SERVICE        = ""                           # existing APIM name, optional (step 05)
-$env:APIM_RESOURCE_GROUP = $env:RESOURCE_GROUP           # RG of the existing APIM, if different
+# $deploymentValues = Get-DeploymentEnvironment
+# $subscriptionId = Get-DeploymentValue $deploymentValues 'AZURE_SUBSCRIPTION_ID'
+# Assert-DeploymentSubscription $subscriptionId
+# $deploymentEnvironmentName = Get-DeploymentValue $deploymentValues 'AZURE_ENV_NAME'
+# foreach ($key in @('AZURE_RESOURCE_GROUP', 'APIC_SERVICE',
+#     'APIC_RESOURCE_ID', 'APIC_PRINCIPAL_ID', 'APIC_LOCATION',
+#     'APIM_SERVICE', 'APIM_RESOURCE_ID', 'APIM_GATEWAY_URL',
+#     'GRID_API_APP_URL', 'GRID_API_APP_NAME',
+#     'GRID_MCP_APP_URL', 'GRID_MCP_APP_NAME')) {
+#     $value = Get-DeploymentValue $deploymentValues $key
+#     [Environment]::SetEnvironmentVariable($key, $value, 'Process')
+# }
 
-$statePath = Join-Path $PSScriptRoot "../.apic-demo-state.json"
-$requestedService = $env:APIC_SERVICE
-$savedState = if (Test-Path $statePath) {
-	Get-Content $statePath -Raw | ConvertFrom-Json
-}
+$env:RESOURCE_GROUP = "rg-apic-initial-retest-20261006"
+$env:LOCATION = "eastus"
+$env:APIM_SERVICE = "apim-initial-retest-20261006"
+$env:APIM_RESOURCE_GROUP = $env:RESOURCE_GROUP  # "<existing-test-apim-resource-group>"
+$env:AZURE_SUBSCRIPTION_ID = '4c88693f-5cc9-4f30-9d1e-d58d4221cf25' # $subscriptionId
+$env:APIC_SERVICE = "apic-initial-retest-20261006"
 
-$existingJson = az resource list `
-  --resource-group $env:RESOURCE_GROUP `
-  --resource-type "Microsoft.ApiCenter/services" `
-  --query "[].name" `
-  -o json 2>$null
-[string[]]$existingServices = if ($LASTEXITCODE -eq 0 -and $existingJson) {
-	@($existingJson | ConvertFrom-Json)
-} else {
-	@()
-}
 
-if ($existingServices.Count -eq 1) {
-	$env:APIC_SERVICE = $existingServices[0]
-} elseif ($existingServices.Count -gt 1) {
-	$preferredService = @($requestedService, $savedState.apiCenterService) |
-		Where-Object { $_ -and $_ -in $existingServices } |
-		Select-Object -First 1
-	if (-not $preferredService) {
-		throw "Multiple API Center services exist in '$($env:RESOURCE_GROUP)'. Set APIC_SERVICE to the intended existing service before running this script."
-	}
-	$env:APIC_SERVICE = $preferredService
-} elseif (-not [string]::IsNullOrWhiteSpace($requestedService)) {
-	$env:APIC_SERVICE = $requestedService
-} elseif ($savedState -and $savedState.resourceGroup -eq $env:RESOURCE_GROUP) {
-	$env:APIC_SERVICE = $savedState.apiCenterService
-} else {
-	$env:APIC_SERVICE = "apic-demo-$(Get-Random)"
-}
+# $env:RESOURCE_GROUP = $env:AZURE_RESOURCE_GROUP
+# $env:APIM_RESOURCE_GROUP = $env:AZURE_RESOURCE_GROUP
+# $env:LOCATION = $env:APIC_LOCATION
+$env:API_ID = 'fleet-vehicle-api'
+$env:API_TITLE = 'Fleet Vehicle API'
+$env:ENV_DEV = 'dev'
+$env:ENV_TEST = 'test'
+$env:ENV_PROD = 'prod'
 
-@{
-	resourceGroup = $env:RESOURCE_GROUP
-	apiCenterService = $env:APIC_SERVICE
-} | ConvertTo-Json | Set-Content $statePath
-
-# Logical names used across scripts
-$env:API_ID    = "fleet-vehicle-api"
-$env:API_TITLE = "Fleet Vehicle API"
-$env:ENV_DEV   = "dev"
-$env:ENV_TEST  = "test"
-$env:ENV_PROD  = "prod"
-
-Write-Host "Vars loaded: RG=$($env:RESOURCE_GROUP) LOCATION=$($env:LOCATION) APIC_SERVICE=$($env:APIC_SERVICE)"
+Write-Host "Environment: $deploymentEnvironmentName; resource group: $env:RESOURCE_GROUP"
+Write-Host "API Center: $env:APIC_SERVICE ($env:APIC_LOCATION); APIM: $env:APIM_SERVICE"

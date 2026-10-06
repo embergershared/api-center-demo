@@ -10,15 +10,20 @@ $customProperties = '{
     "businessOwner": "Fleet Platform Team <fleet-platform@contoso.com>",
     "complianceTag": ["internal-only"]
   }'
+# Pass JSON via file: az.cmd mangles multi-line/quoted args and cmd.exe treats < > as redirection.
+$customPropertiesFile = Join-Path ([System.IO.Path]::GetTempPath()) "apic-custom-properties.json"
+[System.IO.File]::WriteAllText($customPropertiesFile, $customProperties)
 az apic api create `
   --resource-group $env:RESOURCE_GROUP `
   --service-name $env:APIC_SERVICE `
   --api-id $env:API_ID `
   --title $env:API_TITLE `
   --type "rest" `
-  --custom-properties $customProperties `
+  --custom-properties "@$customPropertiesFile" `
   -o table
-if ($LASTEXITCODE -ne 0) { throw "Failed to create API '$($env:API_ID)'." }
+$createExitCode = $LASTEXITCODE
+Remove-Item $customPropertiesFile -ErrorAction SilentlyContinue
+if ($createExitCode -ne 0) { throw "Failed to create API '$($env:API_ID)'." }
 
 Write-Host "==> Creating version v1"
 az apic api version create `
@@ -49,7 +54,7 @@ az apic api definition import-specification `
   --version-id "v1-0" `
   --definition-id "openapi" `
   --format "inline" `
-  --specification '{"name":"openapi","version":"3.0.1"}' `
+  --specification '{name:openapi,version:3.0.1}' `
   --value "@$SamplesDir/fleet-vehicle-v1.json" `
   -o table
 if ($LASTEXITCODE -ne 0) { throw "Failed to import the OpenAPI specification for version 'v1'." }

@@ -4,6 +4,13 @@
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "00-vars.ps1")
 
+# az is a .cmd on Windows: newlines truncate the command line and embedded
+# double quotes are stripped. Pass JSON as a single line with escaped quotes.
+$PSNativeCommandArgumentPassing = 'Legacy'
+function ConvertTo-AzJsonArg([string]$Json) {
+  ($Json | ConvertFrom-Json | ConvertTo-Json -Compress -Depth 10) -replace '"', '\"'
+}
+
 Write-Host "==> Creating custom metadata: lifecycleStage (enum, required on APIs)"
 $lifecycleSchema = '{
     "type": "string",
@@ -21,8 +28,8 @@ az apic metadata create `
   --resource-group $env:RESOURCE_GROUP `
   --service-name $env:APIC_SERVICE `
   --metadata-name "lifecycleStage" `
-  --schema $lifecycleSchema `
-  --assignments '[{"entity":"api","required":true,"deprecated":false}]' `
+  --schema (ConvertTo-AzJsonArg $lifecycleSchema) `
+  --assignments '[{entity:api,required:true,deprecated:false}]' `
   -o table
 if ($LASTEXITCODE -ne 0) { throw "Failed to create lifecycleStage metadata." }
 
@@ -31,8 +38,8 @@ az apic metadata create `
   --resource-group $env:RESOURCE_GROUP `
   --service-name $env:APIC_SERVICE `
   --metadata-name "businessOwner" `
-  --schema '{"type": "string"}' `
-  --assignments '[{"entity":"api","required":true,"deprecated":false}]' `
+  --schema (ConvertTo-AzJsonArg '{"type": "string"}') `
+  --assignments '[{entity:api,required:true,deprecated:false}]' `
   -o table
 if ($LASTEXITCODE -ne 0) { throw "Failed to create businessOwner metadata." }
 
@@ -54,8 +61,8 @@ az apic metadata create `
   --resource-group $env:RESOURCE_GROUP `
   --service-name $env:APIC_SERVICE `
   --metadata-name "complianceTag" `
-  --schema $complianceSchema `
-  --assignments '[{"entity":"api","required":false,"deprecated":false}]' `
+  --schema (ConvertTo-AzJsonArg $complianceSchema) `
+  --assignments '[{entity:api,required:false,deprecated:false}]' `
   -o table
 if ($LASTEXITCODE -ne 0) { throw "Failed to create complianceTag metadata." }
 
