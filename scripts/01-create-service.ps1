@@ -1,4 +1,4 @@
-# 01-create-services.ps1 — create the resource group(s), the API Center service
+# 01-create-service.ps1 — create the resource group(s), the API Center service
 # (Standard plan), and the APIM instance (Consumption tier) used by 05-link-apim.ps1.
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "00-vars.ps1")

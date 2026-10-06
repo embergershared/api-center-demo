@@ -58,7 +58,7 @@ code ./00-vars.ps1
 . ./00-vars.ps1
 
 # 3. Run the scripts
-./01-create-services.ps1
+./01-create-service.ps1
 ./02-metadata-schema.ps1
 ./03-register-openapi-api.ps1
 ./04-versions-and-deprecation.ps1
