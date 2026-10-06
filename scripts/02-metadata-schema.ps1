@@ -6,7 +6,6 @@ $ErrorActionPreference = "Stop"
 
 # az is a .cmd on Windows: embedded double quotes are stripped and values with
 # spaces (e.g. titles) get mangled. Pass each JSON schema via a temp file (@file).
-# The metadata display name comes from the schema's "title" property.
 $SchemaFile = Join-Path ([System.IO.Path]::GetTempPath()) "apic-metadata-schema.json"
 
 # All fields are optional (required:false): the VS Code extension and 'az apic api register'
