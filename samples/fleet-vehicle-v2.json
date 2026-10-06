@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "Fleet Vehicle API",
+    "title": "Fleet Vehicle API (az apic)",
     "version": "2.0.0",
     "description": "A sample API for managing an electrified fleet — vehicles, battery state, and depot charging sessions. Version 2 — adds pagination, vehicle operational status, and structured errors."
   },

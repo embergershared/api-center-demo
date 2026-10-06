@@ -42,7 +42,7 @@ Write-Host "                               fleet-vehicle-api and erase its custo
 Write-Host "        API type            : REST"
 Write-Host "        Version title       : v2"
 Write-Host "        Version lifecycle   : Development"
-Write-Host "        Definition title    : OpenAPI 3.0"
+Write-Host "        Definition title    : OpenAPI"
 Write-Host "        Specification       : OpenAPI (version 3.0.1 if prompted)"
 Write-Host "        Definition file     : samples/fleet-vehicle-v2.json"
 Write-Host "    - Then set Lifecycle stage / Business owner on the new API in the portal (VS Code can't set custom metadata)."
