@@ -32,7 +32,7 @@ az apic api definition import-specification `
   --version-id "v2-0" `
   --definition-id "openapi" `
   --format "inline" `
-  --specification '{"name":"openapi","version":"3.0.1"}' `
+  --specification '{name:openapi,version:3.0.1}' `
   --value "@$SamplesDir/fleet-vehicle-v2.json" `
   -o table
 if ($LASTEXITCODE -ne 0) { throw "Failed to import the OpenAPI specification for version 'v2'." }

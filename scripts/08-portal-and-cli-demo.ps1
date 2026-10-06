@@ -7,12 +7,13 @@ $ErrorActionPreference = "Stop"
 
 Write-Host "==> 1) Self-service developer portal"
 Write-Host "    Portal URL pattern: https://$($env:APIC_SERVICE).portal.<region>.azure-api.net"
-Write-Host "    (Confirm exact URL with: az apic service show -g $($env:RESOURCE_GROUP) -n $($env:APIC_SERVICE))"
-az apic service show `
+Write-Host "    (Confirm exact URL with: az apic show -g $($env:RESOURCE_GROUP) -n $($env:APIC_SERVICE))"
+az apic show `
   --resource-group $env:RESOURCE_GROUP `
   --name $env:APIC_SERVICE `
   --query "{name:name, id:id}" `
   -o table
+if ($LASTEXITCODE -ne 0) { throw "Failed to show API Center service '$($env:APIC_SERVICE)'." }
 
 Write-Host ""
 Write-Host "==> 2) VS Code extension moment"

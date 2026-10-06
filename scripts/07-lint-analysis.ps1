@@ -16,15 +16,20 @@ $customProperties = '{
     "lifecycleStage": "development",
     "businessOwner": "Depot Operations Team"
   }'
+# Pass JSON via file: az.cmd mangles multi-line/quoted args.
+$customPropertiesFile = Join-Path ([System.IO.Path]::GetTempPath()) "apic-custom-properties.json"
+[System.IO.File]::WriteAllText($customPropertiesFile, $customProperties)
 az apic api create `
   --resource-group $env:RESOURCE_GROUP `
   --service-name $env:APIC_SERVICE `
   --api-id "legacy-depot-charger-api" `
   --title "Legacy Depot Charger API" `
   --type "rest" `
-  --custom-properties $customProperties `
+  --custom-properties "@$customPropertiesFile" `
   -o table
-if ($LASTEXITCODE -ne 0) { throw "Failed to create the legacy depot charger API." }
+$createExitCode = $LASTEXITCODE
+Remove-Item $customPropertiesFile -ErrorAction SilentlyContinue
+if ($createExitCode -ne 0) { throw "Failed to create the legacy depot charger API." }
 
 az apic api version create `
   --resource-group $env:RESOURCE_GROUP `
@@ -53,7 +58,7 @@ az apic api definition import-specification `
   --version-id "v1-0" `
   --definition-id "openapi" `
   --format "inline" `
-  --specification '{"name":"openapi","version":"3.0.1"}' `
+  --specification '{name:openapi,version:3.0.1}' `
   --value "@$SamplesDir/legacy-depot-charger-messy.json" `
   -o table
 if ($LASTEXITCODE -ne 0) { throw "Failed to import the legacy OpenAPI specification." }

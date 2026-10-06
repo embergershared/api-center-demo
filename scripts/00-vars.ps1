@@ -32,5 +32,8 @@ $env:ENV_DEV = 'dev'
 $env:ENV_TEST = 'test'
 $env:ENV_PROD = 'prod'
 
-Write-Host "Environment: $deploymentEnvironmentName; resource group: $env:RESOURCE_GROUP"
-Write-Host "API Center: $env:APIC_SERVICE ($env:APIC_LOCATION); APIM: $env:APIM_SERVICE"
+az account set --subscription $env:AZURE_SUBSCRIPTION_ID
+if ($LASTEXITCODE -ne 0) { throw "Failed to select subscription '$($env:AZURE_SUBSCRIPTION_ID)'. Run 'az login' first." }
+
+Write-Host "Subscription: $env:AZURE_SUBSCRIPTION_ID; resource group: $env:RESOURCE_GROUP ($env:LOCATION)"
+Write-Host "API Center: $env:APIC_SERVICE; APIM: $env:APIM_SERVICE ($env:APIM_RESOURCE_GROUP)"
