@@ -15,7 +15,7 @@
 #     [Environment]::SetEnvironmentVariable($key, $value, 'Process')
 # }
 
-$env:NAMING_BASE = "s3-usc-apicdemo-initial-02"
+$env:NAMING_BASE = "s3-usc-apicdemo-initial-03"
 $env:LOCATION = "centralus"
 $env:AZURE_SUBSCRIPTION_ID = '4c88693f-5cc9-4f30-9d1e-d58d4221cf25' # $subscriptionId
 

@@ -9,7 +9,9 @@ $ErrorActionPreference = "Stop"
 # The metadata display name comes from the schema's "title" property.
 $SchemaFile = Join-Path ([System.IO.Path]::GetTempPath()) "apic-metadata-schema.json"
 
-Write-Host "==> Creating custom metadata: lifecycleStage (enum, required on APIs)"
+# All fields are optional (required:false): the VS Code extension and 'az apic api register'
+# can't set custom metadata, so required fields would block registration from those tools.
+Write-Host "==> Creating custom metadata: lifecycleStage (enum, optional on APIs)"
 $lifecycleSchema = '{
     "type": "string",
     "title": "Lifecycle stage",
@@ -29,18 +31,18 @@ az apic metadata create `
   --service-name $env:APIC_SERVICE `
   --metadata-name "lifecycleStage" `
   --schema "@$SchemaFile" `
-  --assignments '[{entity:api,required:true,deprecated:false}]' `
+  --assignments '[{entity:api,required:false,deprecated:false}]' `
   -o table
 if ($LASTEXITCODE -ne 0) { throw "Failed to create lifecycleStage metadata." }
 
-Write-Host "==> Creating custom metadata: businessOwner (string, required on APIs)"
+Write-Host "==> Creating custom metadata: businessOwner (string, optional on APIs)"
 [System.IO.File]::WriteAllText($SchemaFile, '{"type": "string", "title": "Business owner"}')
 az apic metadata create `
   --resource-group $env:RESOURCE_GROUP `
   --service-name $env:APIC_SERVICE `
   --metadata-name "businessOwner" `
   --schema "@$SchemaFile" `
-  --assignments '[{entity:api,required:true,deprecated:false}]' `
+  --assignments '[{entity:api,required:false,deprecated:false}]' `
   -o table
 if ($LASTEXITCODE -ne 0) { throw "Failed to create businessOwner metadata." }
 

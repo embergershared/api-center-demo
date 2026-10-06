@@ -1,1 +1,4 @@
 .apic-demo-state.json
+
+# Local ruleset copies created by the VS Code Azure API Center extension
+.api-center-rules/

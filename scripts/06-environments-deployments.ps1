@@ -38,4 +38,4 @@ $CreateExitCode = $LASTEXITCODE
 Remove-Item $ServerFile -ErrorAction SilentlyContinue
 if ($CreateExitCode -ne 0) { throw "Failed to create the production deployment." }
 
-Write-Host "==> In the portal: open Fleet Vehicle API > Deployments to show the environment -> runtime URL mapping."
+Write-Host "==> In Azure portal: open Fleet Vehicle API > Deployments to show the environment -> runtime URL mapping."
