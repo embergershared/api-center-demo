@@ -8,14 +8,17 @@
 #   B) Run spectral locally against the same file so the audience sees the
 #      raw output immediately (faster for a live demo, no waiting on portal refresh).
 $ErrorActionPreference = "Stop"
+
 . (Join-Path $PSScriptRoot "00-vars.ps1")
 $SamplesDir = Join-Path $PSScriptRoot "../samples"
 
 Write-Host "==> (A) Registering the messy API in the catalog so its analysis shows up in-portal"
+
 $customProperties = '{
     "lifecycleStage": "development",
     "businessOwner": "Depot Operations Team"
   }'
+
 # Pass JSON via file: az.cmd mangles multi-line/quoted args.
 $customPropertiesFile = Join-Path ([System.IO.Path]::GetTempPath()) "apic-custom-properties.json"
 [System.IO.File]::WriteAllText($customPropertiesFile, $customProperties)

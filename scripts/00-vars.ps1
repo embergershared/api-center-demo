@@ -15,12 +15,15 @@
 #     [Environment]::SetEnvironmentVariable($key, $value, 'Process')
 # }
 
-$env:RESOURCE_GROUP = "rg-apic-initial-retest-20261006"
-$env:LOCATION = "eastus"
-$env:APIM_SERVICE = "apim-initial-retest-20261006"
-$env:APIM_RESOURCE_GROUP = $env:RESOURCE_GROUP  # "<existing-test-apim-resource-group>"
+$env:NAMING_BASE = "s3-usc-apicdemo-initial-02"
+$env:LOCATION = "centralus"
 $env:AZURE_SUBSCRIPTION_ID = '4c88693f-5cc9-4f30-9d1e-d58d4221cf25' # $subscriptionId
-$env:APIC_SERVICE = "apic-initial-retest-20261006"
+
+$env:RESOURCE_GROUP = "rg-$env:NAMING_BASE"
+$env:APIM_RESOURCE_GROUP = $env:RESOURCE_GROUP  # "<existing-test-apim-resource-group>"
+
+$env:APIM_SERVICE = "apim-$env:NAMING_BASE"
+$env:APIC_SERVICE = "apic-$env:NAMING_BASE"
 
 
 # $env:RESOURCE_GROUP = $env:AZURE_RESOURCE_GROUP

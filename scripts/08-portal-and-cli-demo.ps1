@@ -5,6 +5,21 @@
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "00-vars.ps1")
 
+$ApicId = az apic show --resource-group $env:RESOURCE_GROUP --name $env:APIC_SERVICE --query id -o tsv
+if ($LASTEXITCODE -ne 0) { throw "Failed to get API Center service '$($env:APIC_SERVICE)'." }
+
+Write-Host "==> 0) Configure the API Center portal sign-in (one-time, in the Azure portal)"
+Write-Host "    Open: https://portal.azure.com/#resource$ApicId"
+Write-Host "    - Go to Consumption > Portal settings > Access tab."
+Write-Host "    - Click 'Configure Entra ID', keep the 'Quick setup' tab, then click 'Configure'."
+Write-Host "      (Registers the '$($env:APIC_SERVICE)-apic-aad' Entra ID app, its permissions and redirect URL,"
+Write-Host "       and assigns you the 'Azure API Center Data Reader' role.)"
+Write-Host "    - Click 'Save + publish'."
+Write-Host "    Requires rights to create Entra ID app registrations and to assign Azure roles."
+Write-Host "    Other demo users also need the 'Azure API Center Data Reader' role on the service."
+Read-Host "    Press Enter once the portal is configured and published"
+
+Write-Host ""
 Write-Host "==> 1) Self-service developer portal"
 Write-Host "    Portal URL pattern: https://$($env:APIC_SERVICE).portal.<region>.azure-api.net"
 Write-Host "    (Confirm exact URL with: az apic show -g $($env:RESOURCE_GROUP) -n $($env:APIC_SERVICE))"

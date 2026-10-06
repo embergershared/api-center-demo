@@ -23,7 +23,7 @@ Before running the numbered scripts, load the shared environment variables:
 
 | # | Script | What to show | Key line |
 |---|--------|--------------|----------|
-| 1 | `01-create-service.ps1` | Empty API Center service just created | "This is the blank system of record." |
+| 1 | `01-create-services.ps1` | Empty API Center service just created | "This is the blank system of record." |
 | 2 | `02-metadata-schema.ps1` | Custom metadata fields: lifecycle stage, business owner, compliance tag | "These become searchable/filterable facets — e.g. tag APIs owned by the Fleet Platform team vs. a charging-vendor integration." |
 | 3 | `03-register-openapi-api.ps1` | Register **Fleet Vehicle API** (vehicles, battery state, depot charging sessions) from a plain OpenAPI file upload | "Not APIM-only — any spec, any origin, including third-party telematics/charging vendors." |
 | 4 | Portal UI | Filter/search catalog by the new metadata fields | "Governance and audit-readiness, not just a list of URLs." |

@@ -13,6 +13,10 @@ record for every API — REST, GraphQL, gRPC, SOAP — no matter where it runs
 - An Azure subscription with `Contributor` on the target resource group.
 - (Optional, for APIM sync step) an existing Azure API Management instance.
 - VS Code + the **Azure API Center** extension (marketplace) for the dev-tooling moment.
+- (Optional, for the local lint in `07-lint-analysis`) Node.js + the Spectral CLI:
+  ```bash
+  npm install -g @stoplight/spectral-cli
+  ```
 - `az login` completed, correct subscription set (`az account set -s <sub-id>`).
 
 ## Layout
@@ -46,12 +50,19 @@ chmod +x *.sh
 
 ```powershell
 cd scripts
-. ./00-vars.ps1          # dot-source; edit subscription/region/names first!
-./01-create-service.ps1
+
+# 1. Edit the values in 00-vars.ps1
+code ./00-vars.ps1
+
+# 2. Dot source the values
+. ./00-vars.ps1
+
+# 3. Run the scripts
+./01-create-services.ps1
 ./02-metadata-schema.ps1
 ./03-register-openapi-api.ps1
 ./04-versions-and-deprecation.ps1
-./05-link-apim.ps1       # optional, needs an existing APIM instance
+./05-link-apim.ps1
 ./06-environments-deployments.ps1
 ./07-lint-analysis.ps1
 ./08-portal-and-cli-demo.ps1
