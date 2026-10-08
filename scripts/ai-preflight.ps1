@@ -63,7 +63,13 @@ foreach ($kind in @('chat', 'embedding')) {
         $_.name -ceq $skuName -and $_.usageName -eq $baseUsageName
     })
     if ($sku.Count -ne 1) {
-        throw "Base-model SKU $skuName for $name/$version with quota '$baseUsageName' is not uniquely available for AIServices/S0 in $location. Use az cognitiveservices model list --location $location and choose supported parameters."
+        $available = @($matches[0].model.skus | Where-Object {
+            $_.name -cin @('GlobalStandard', 'Standard') -and
+            $_.usageName -eq "OpenAI.$($_.name).$name"
+        } | ForEach-Object name | Sort-Object -Unique)
+        $availableText = if ($available.Count) { $available -join ', ' } else { 'none' }
+        $setting = if ($kind -eq 'chat') { 'CHAT_DEPLOYMENT_SKU' } else { 'EMBEDDING_DEPLOYMENT_SKU' }
+        throw "Base-model SKU $skuName for $name/$version with quota '$baseUsageName' is not uniquely available for AIServices/S0 in $location (matching entries: $($sku.Count)). Supported PAYG base-model SKU names in the catalog: $availableText. Use azd env set $setting <SKU> to choose a listed SKU, then rerun preflight to verify availability and quota. GlobalStandard can process inference globally."
     }
     if ($sku[0].deprecationDate -and [DateTimeOffset]$sku[0].deprecationDate -le [DateTimeOffset]::UtcNow) {
         throw "Model $name/$version SKU $skuName is deprecated; select a supported version."

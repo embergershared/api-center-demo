@@ -20,16 +20,6 @@ function Set-ProvisionedCatalog {
         (Get-DeploymentValue $Values 'AZURE_RESOURCE_GROUP'), '--service-name',
         (Get-DeploymentValue $Values 'APIC_SERVICE'))
 
-    function Invoke-CatalogRest {
-        param([string] $Method, [string] $Id, [object] $Body)
-        $arguments = @('rest', '--method', $Method, '--url',
-            "https://management.azure.com${Id}?api-version=2024-06-01-preview", '--output', 'json')
-        $jsonArguments = @{}
-        if ($null -ne $Body) { $jsonArguments['--body'] = ConvertTo-Json -InputObject $Body -Depth 30 -Compress }
-        $result = Invoke-DemoAz -Arguments $arguments -JsonArguments $jsonArguments -FailureMessage "Catalog $Method failed: $Id"
-        if ($result) { return ($result -join [Environment]::NewLine) | ConvertFrom-Json }
-    }
-
     $environmentId = "$workspace/environments/managed-apim"
     $null = Invoke-CatalogRest PUT $environmentId @{
         properties = @{
@@ -92,7 +82,7 @@ function Set-ProvisionedCatalog {
         Write-Host "Provisioned $($entry.title): $($entry.url)"
     }
 
-    Write-Host 'Independent catalog entries configured. To link APIM later, run scripts/05-link-apim.ps1 explicitly.'
+    Write-Host 'Independent catalog entries configured. The next postprovision step verifies the APIM synchronization link.'
 }
 
 if ($MyInvocation.InvocationName -ne '.') {

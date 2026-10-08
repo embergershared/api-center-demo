@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "8JEBc3MMeCs=",
+  "dgSpecHash": "R03QNE4HLsc=",
   "success": true,
-  "projectFilePath": "D:\\git\\GitHub\\gopher194_personal\\embergershared\\api-center-demo\\src\\GridTelemetry.Api\\GridTelemetry.Api.csproj",
+  "projectFilePath": "D:\\Git\\GitHub\\gopher194_personal\\embergershared\\api-center-demo\\src\\GridTelemetry.Api\\GridTelemetry.Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\emberger\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.12\\microsoft.aspnetcore.openapi.10.0.12.nupkg.sha512",
     "C:\\Users\\emberger\\.nuget\\packages\\microsoft.openapi\\2.12.0\\microsoft.openapi.2.12.0.nupkg.sha512"

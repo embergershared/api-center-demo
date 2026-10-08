@@ -15,7 +15,7 @@ Set overrides with `azd env set NAME value` before preview/provisioning.
 | `CHAT_DEPLOYMENT_SKU` | `GlobalStandard` | PAYG; `Standard` is the regional alternative |
 | `CHAT_CAPACITY` | `10` | Model capacity units, not provisioned throughput |
 | `EMBEDDING_MODEL_NAME` / `EMBEDDING_MODEL_VERSION` | `text-embedding-3-small` / `1` | Embeddings for cache lookup |
-| `EMBEDDING_DEPLOYMENT_SKU` | `Standard` | Choose an available PAYG SKU |
+| `EMBEDDING_DEPLOYMENT_SKU` | `GlobalStandard` | PAYG; global inference routing, including when the account is in Central US |
 | `EMBEDDING_CAPACITY` | `10` | Model capacity units |
 | `REDIS_SKU` | `Balanced_B0` | `Balanced_B1` is also allowed |
 | `REDIS_HIGH_AVAILABILITY` | `false` | Demo-only; enabling HA increases cost |
@@ -28,9 +28,28 @@ availability, retirement dates, quota, and current SKU/region support must be
 checked for the target subscription. Use:
 
 ```powershell
-az cognitiveservices model list --location eastus --output json
-az cognitiveservices usage list --location eastus --output table
+. .\scripts\deployment-context.ps1
+$values = Get-DeploymentEnvironment
+$aiLocation = Get-DeploymentParameterValue $values 'aiLocation'
+$subscriptionId = Get-DeploymentValue $values 'AZURE_SUBSCRIPTION_ID'
+az cognitiveservices model list --location $aiLocation --subscription $subscriptionId --output json
+az cognitiveservices usage list --location $aiLocation --subscription $subscriptionId --output table
 ```
+
+Central US lists `GlobalStandard`, not regional `Standard`, for
+`text-embedding-3-small` version `1` in the live AIServices/S0 catalog checked
+on 2026-10-08. Existing environments retain their saved SKU; to migrate an
+environment pinned to `Standard`, explicitly select it and run:
+
+```powershell
+azd env set EMBEDDING_DEPLOYMENT_SKU GlobalStandard
+.\scripts\01-create-service.ps1 -PreviewOnly
+```
+
+`GlobalStandard` can process inference globally; it is not a regional-only
+processing guarantee. Keep `Standard` only where the live catalog and quota
+support it. Preflight reports catalog alternatives but never switches SKUs
+automatically.
 
 Preflight selects the `AIServices`/`S0` catalog entry used by the Foundry
 template, then matches the base-model SKU's quota identifier
@@ -74,8 +93,9 @@ azd env set CHAT_MODEL_VERSION 2026-07-09
 
 ## One-time portal steps
 
-1. API Center is provisioned on Standard by default. Link APIM using script 05
-   to obtain the eligible linked-APIM benefit; Standard may be billed until
+1. API Center is provisioned on Standard by default. The postprovision hook
+   runs script 05 to establish or verify the APIM link; rerun it to inspect
+   an existing link after a failed hook. Standard may be billed until
    that link is established. Only an environment explicitly pinned to Free
    needs the portal upgrade and `azd env set API_CENTER_SKU Standard` afterward.
 2. Open the modern Foundry project identified by `AZURE_AI_PROJECT_ENDPOINT`.

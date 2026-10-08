@@ -72,11 +72,11 @@ if ($profile -eq 'full') {
     $catalogEntries = ($catalogJson -join [Environment]::NewLine) | ConvertFrom-Json -NoEnumerate
     if ($catalogEntries -isnot [array]) { throw 'API Center did not return a catalog array.' }
     if ($catalogEntries.Count -eq 0) {
-        Write-Warning 'AI API not yet visible in the catalog. Check apim-integration and allow time for asynchronous synchronization; run this script again later.'
+        Write-Warning 'AI API not yet visible in the catalog. Run script 05 to check the APIM integration and allow time for asynchronous synchronization; run this script again later.'
     }
     else {
         $catalogEntries | Format-Table name, title | Out-Host
-        Write-Host '    Matching entries found. Inspect their source in API Center to confirm they belong to apim-integration.'
+        Write-Host '    Matching entries found. Inspect their source in API Center to confirm they belong to the APIM integration reported by script 05.'
     }
     Write-Host "    Foundry project endpoint: $(Get-DeploymentValue $deploymentValues 'AZURE_AI_PROJECT_ENDPOINT')"
     Write-Host "    AI gateway endpoint: $(Get-DeploymentValue $deploymentValues 'AI_GATEWAY_URL')"

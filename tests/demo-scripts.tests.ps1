@@ -29,7 +29,6 @@ function spectral {
 $demoScripts = [ordered]@{
     '03-register-openapi-api.ps1' = 4
     '04-versions-and-deprecation.ps1' = 5
-    '05-link-apim.ps1' = 4
     '06-environments-deployments.ps1' = 4
     '07-lint-analysis.ps1' = 4
     '08-portal-and-cli-demo.ps1' = 2
@@ -71,23 +70,6 @@ try {
     Assert-True ($calls[2].payloads['--value'].info.version -eq '2.0.0' -and
         $calls[4].payloads['--specification-path'].info.version -eq '2.0.0' -and
         (Get-DemoArgument $calls[4] '--path') -eq 'fleet') 'Wrong APIM import.'
-
-    $calls = $demoResults['05-link-apim.ps1']
-    Assert-True ("$($demoLogs['05-link-apim.ps1'])" -match 'azd env set API_CENTER_SKU Standard' -and
-        "$($demoLogs['05-link-apim.ps1'])" -match 'does not confirm synchronization completion') 'Integration must explain the plan handoff without claiming sync completion.'
-    Assert-True ((Get-DemoArgument $calls[2] '--query') -ceq
-        "[?principalId=='$($global:demoTestValues.APIC_PRINCIPAL_ID)' && roleDefinitionName=='API Management Service Reader Role'].id | [0]") 'Reader query changed or was split.'
-    Assert-True ((Get-DemoArgument $calls[3] '--azure-apim') -eq $global:demoTestValues.APIM_RESOURCE_ID) 'Integration must use the deployed APIM resource ID.'
-    $global:demoTestState.demoCalls = @()
-    $global:demoTestState.principalId = 'wrong'
-    Assert-Throws { $null = & (Join-Path $root 'scripts\05-link-apim.ps1') 6>&1 } 'identity does not match'
-    Assert-True ($global:demoTestState.demoCalls.Count -eq 2) 'Identity mismatch must block integration.'
-    $global:demoTestState.principalId = $global:demoTestValues.APIC_PRINCIPAL_ID
-    $global:demoTestState.demoCalls = @()
-    $global:demoTestState.readerAssignment = ''
-    Assert-Throws { $null = & (Join-Path $root 'scripts\05-link-apim.ps1') 6>&1 } 'missing its provisioned APIM Reader'
-    Assert-True ($global:demoTestState.demoCalls.Count -eq 3) 'Missing Reader role must block integration.'
-    $global:demoTestState.readerAssignment = 'reader-assignment'
 
     $calls = $demoResults['06-environments-deployments.ps1']
     Assert-True ("$($demoLogs['06-environments-deployments.ps1'])" -match 'catalog records, not separate azd environments' -and

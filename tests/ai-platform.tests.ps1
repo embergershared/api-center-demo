@@ -130,10 +130,12 @@ foreach ($invalid in @(
         $template.parameters.chatModelVersion.defaultValue) 'Script and Bicep version defaults drifted.'
     Assert-True ((Get-DeploymentParameterValue @{ CHAT_MODEL_NAME = '' } 'chatModelName') -eq
         $template.parameters.chatModelName.defaultValue) 'Blank model settings must use the shared default.'
+    Assert-True ((Get-DeploymentParameterValue $values 'embeddingDeploymentSku') -eq 'GlobalStandard' -and
+        $template.parameters.embeddingDeploymentSku.defaultValue -eq 'GlobalStandard') 'Embeddings defaults must stay aligned and support Central US GlobalStandard deployments.'
     $global:aiTest = @{
         fail = $false; quota = 100; modelAvailable = $true; requests = 0; httpStatus = 200
         foundryAvailable = $true; baseSkuCopies = 1; retired = $false; deprecated = $false
-        lifecycle = 'GenerallyAvailable'; chatSupported = 'true'
+        lifecycle = 'GenerallyAvailable'; chatSupported = 'true'; embeddingSku = 'GlobalStandard'
     }
     function az {
         $global:LASTEXITCODE = 0
@@ -144,7 +146,7 @@ foreach ($invalid in @(
                 if ($accountKind -eq 'AIServices' -and -not $global:aiTest.foundryAvailable) { continue }
                 foreach ($definition in @(
                     @{ name = 'gpt-5.6-luna'; version = '2026-07-09'; sku = 'GlobalStandard' },
-                    @{ name = 'text-embedding-3-small'; version = '1'; sku = 'Standard' }
+                    @{ name = 'text-embedding-3-small'; version = '1'; sku = $global:aiTest.embeddingSku }
                 )) {
                     $usageName = "OpenAI.$($definition.sku).$($definition.name)"
                     $skus = @(for ($i = 0; $i -lt $global:aiTest.baseSkuCopies; $i++) {
@@ -176,7 +178,7 @@ foreach ($invalid in @(
             ConvertTo-Json -InputObject $models -Depth 12
         }
         elseif ($args[1] -eq 'usage') {
-            @('OpenAI.GlobalStandard.gpt-5.6-luna', 'OpenAI.Standard.text-embedding-3-small') | ForEach-Object {
+            @('OpenAI.GlobalStandard.gpt-5.6-luna', "OpenAI.$($global:aiTest.embeddingSku).text-embedding-3-small") | ForEach-Object {
                 @{ name = @{ value = $_ }; limit = $global:aiTest.quota; currentValue = 0 }
                 @{ name = @{ value = "$_-finetune" }; limit = 1000; currentValue = 0 }
             } | ConvertTo-Json -Depth 5
@@ -215,6 +217,18 @@ foreach ($invalid in @(
     function Start-Sleep { }
     try {
         & (Join-Path $root 'scripts\ai-preflight.ps1') -Values $values
+        $values.AI_LOCATION = 'centralus'
+        $values.EMBEDDING_DEPLOYMENT_SKU = 'Standard'
+        Assert-Throws { & (Join-Path $root 'scripts\ai-preflight.ps1') -Values $values } 'Base-model SKU Standard.*in centralus.*SKU names in the catalog: GlobalStandard.*azd env set EMBEDDING_DEPLOYMENT_SKU'
+        Assert-True ($values.EMBEDDING_DEPLOYMENT_SKU -eq 'Standard') 'Preflight must not silently change an explicit SKU.'
+        $values.Remove('EMBEDDING_DEPLOYMENT_SKU')
+        & (Join-Path $root 'scripts\ai-preflight.ps1') -Values $values
+        $values.AI_LOCATION = 'eastus'
+        $values.EMBEDDING_DEPLOYMENT_SKU = 'Standard'
+        $global:aiTest.embeddingSku = 'Standard'
+        & (Join-Path $root 'scripts\ai-preflight.ps1') -Values $values
+        $values.Remove('EMBEDDING_DEPLOYMENT_SKU')
+        $global:aiTest.embeddingSku = 'GlobalStandard'
         $global:aiTest.foundryAvailable = $false
         Assert-Throws { & (Join-Path $root 'scripts\ai-preflight.ps1') -Values $values } 'not uniquely available for AIServices/S0'
         $global:aiTest.foundryAvailable = $true
@@ -247,7 +261,7 @@ foreach ($invalid in @(
         Assert-Throws { & (Join-Path $root 'scripts\ai-preflight.ps1') -Values $values } 'Insufficient available quota'
         $allocated = @(
             @{ name = 'chat'; properties = @{ model = @{ name = 'gpt-5.6-luna'; version = '2026-07-09' } }; sku = @{ name = 'GlobalStandard'; capacity = 10 } },
-            @{ name = 'embeddings'; properties = @{ model = @{ name = 'text-embedding-3-small'; version = '1' } }; sku = @{ name = 'Standard'; capacity = 10 } }
+            @{ name = 'embeddings'; properties = @{ model = @{ name = 'text-embedding-3-small'; version = '1' } }; sku = @{ name = 'GlobalStandard'; capacity = 10 } }
         )
         & (Join-Path $root 'scripts\ai-preflight.ps1') -Values $values -ExistingDeployments $allocated
         $global:aiTest.lifecycle = 'Deprecating'

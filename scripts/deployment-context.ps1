@@ -27,12 +27,18 @@ function Show-DeploymentEnvironmentSelection {
 
 function Get-DeploymentEnvironment {
     [CmdletBinding()]
-    param()
+    param([ValidateNotNullOrEmpty()][string] $EnvironmentName)
 
     Push-Location (Split-Path -Parent $PSScriptRoot)
     try {
-        Show-DeploymentEnvironmentSelection
-        $json = & azd env get-values --output json
+        if ($PSBoundParameters.ContainsKey('EnvironmentName')) {
+            Write-Host "azd environment: '$EnvironmentName' (source: explicit environment)"
+            $json = & azd env get-values --environment $EnvironmentName --output json
+        }
+        else {
+            Show-DeploymentEnvironmentSelection
+            $json = & azd env get-values --output json
+        }
         if ($LASTEXITCODE -ne 0) { throw 'Unable to load the selected azd environment.' }
         # Preserve ISO timestamps as strings across PowerShell versions.
         $document = [System.Text.Json.JsonDocument]::Parse(($json -join [Environment]::NewLine))

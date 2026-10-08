@@ -17,7 +17,10 @@ function Assert-Throws {
 }
 
 & (Join-Path $PSScriptRoot 'deployment-defaults.tests.ps1')
+& (Join-Path $PSScriptRoot 'setup-environment.tests.ps1')
 & (Join-Path $PSScriptRoot 'provision-catalog.tests.ps1')
+& (Join-Path $PSScriptRoot 'link-apim.tests.ps1')
+& (Join-Path $PSScriptRoot 'grid-registration.tests.ps1')
 
 foreach ($folder in @('scripts', 'tests')) {
     Get-ChildItem (Join-Path $root $folder) -Filter *.ps1 -Recurse | ForEach-Object {
@@ -42,7 +45,7 @@ $lintText = (($lint | ForEach-Object { "$_" }) | Where-Object {
 Assert-True ($LASTEXITCODE -eq 0 -and "$lintText" -notmatch '\b(Warning|Error)\b') "Bicep lint failed: $lintText"
 $resources = $template.resources
 $azureYaml = Get-Content (Join-Path $root 'azure.yaml') -Raw
-Assert-True ($azureYaml -match '(?s)postprovision:\s+shell: pwsh\s+continueOnError: false\s+run: ./scripts/provision-catalog.ps1') 'azd must provision the catalog through a failing-on-error postprovision hook.'
+Assert-True ($azureYaml -match '(?s)postprovision:\s+shell: pwsh\s+continueOnError: false\s+run: \|\s+\$ErrorActionPreference = ''Stop''\s+./scripts/provision-catalog.ps1\s+./scripts/05-link-apim.ps1') 'azd must provision independent catalog entries, then verify the APIM link through a failing-on-error postprovision hook.'
 $learnAgentScript = Get-Content (Join-Path $root 'scripts\13-learn-agent-demo.ps1') -Raw
 Assert-True ($learnAgentScript -match 'azd ai connection create \$connectionName' -and
     $learnAgentScript -match "\`$agentName\s*=\s*'azure-learn-managed'" -and
@@ -199,6 +202,12 @@ Assert-True ($rbac.properties.principalType -eq 'ServicePrincipal') 'RBAC princi
 Assert-True ($rbac.scope -match 'Microsoft.ApiManagement/service') 'Reader role must be scoped to APIM.'
 Assert-True ($rbac.name -match 'guid\(') 'Role assignment must have a deterministic name.'
 Assert-True ($resources.apiManagement.properties.template.variables.readerRoleId -match '71522526-b88f-4d52-b57f-d31fc3546d0d') 'Wrong reader role.'
+Assert-True ($resources.apiCenter.properties.template.outputs.principalId.value -match '\.identity\.principalId' -and
+    $resources.apiManagement.properties.parameters.apiCenterPrincipalId.value -eq "[reference('apiCenter').outputs.principalId.value]" -and
+    $rbac.properties.principalId -eq "[parameters('apiCenterPrincipalId')]" -and
+    $rbac.properties.roleDefinitionId -eq "[variables('readerRoleId')]") 'APIM Reader must be granted to API Center identity, not APIM identity or the deployer.'
+Assert-True ($resources.apiManagement.dependsOn -contains 'apiCenter' -and
+    ($rbac.dependsOn -join ' ') -match 'Microsoft.ApiManagement/service') 'Provisioning must wait for API Center identity and APIM before granting the reader role.'
 foreach ($output in @('AZURE_RESOURCE_GROUP','APIC_SERVICE','APIC_RESOURCE_ID','APIC_PRINCIPAL_ID',
     'APIC_LOCATION','APIM_SERVICE','APIM_RESOURCE_ID','APIM_GATEWAY_URL',
     'GRID_API_APP_URL','GRID_API_APP_NAME','GRID_MCP_APP_URL','GRID_MCP_APP_NAME',

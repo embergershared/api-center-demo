@@ -5,8 +5,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.43.8.12551",
-      "templateHash": "15440233848562352265"
+      "version": "0.48.1.52935",
+      "templateHash": "4783578320913426495"
     }
   },
   "functions": [
@@ -80,7 +80,7 @@
           ],
           "output": {
             "type": "object",
-            "value": "[union(createObject('repository', parameters('repository'), 'azd-env-name', parameters('environmentName'), 'environment', parameters('environmentName'), 'profile', parameters('deploymentProfile'), 'managed-by', 'azd', 'created-on', parameters('createdOn'), 'last-updated-on', parameters('lastUpdatedOn')), if(empty(parameters('owner')), createObject(), createObject('owner', parameters('owner'))), if(empty(parameters('costCenter')), createObject(), createObject('cost-center', parameters('costCenter'))))]"
+            "value": "[union(createObject('repository', parameters('repository'), 'azd-env-name', parameters('environmentName'), 'environment', parameters('environmentName'), 'profile', parameters('deploymentProfile'), 'managed-by', 'azd', 'SecurityControl', 'Ignore', 'created-on', parameters('createdOn'), 'last-updated-on', parameters('lastUpdatedOn')), if(empty(parameters('owner')), createObject(), createObject('owner', parameters('owner'))), if(empty(parameters('costCenter')), createObject(), createObject('cost-center', parameters('costCenter'))))]"
           },
           "metadata": {
             "description": "Builds the common tag object. Pass empty strings for owner and costCenter to omit those tags entirely.",
@@ -229,13 +229,13 @@
     },
     "apiCenterSku": {
       "type": "string",
-      "defaultValue": "Free",
+      "defaultValue": "Standard",
       "allowedValues": [
         "Free",
         "Standard"
       ],
       "metadata": {
-        "description": "Use Standard after the explicit API Center plan upgrade; keep Free for initial provisioning."
+        "description": "API Center defaults to Standard. Set Free explicitly only when its feature limits are acceptable."
       }
     },
     "aiLocation": {
@@ -301,7 +301,7 @@
     },
     "embeddingDeploymentSku": {
       "type": "string",
-      "defaultValue": "Standard",
+      "defaultValue": "GlobalStandard",
       "allowedValues": [
         "GlobalStandard",
         "Standard"
@@ -509,8 +509,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.43.8.12551",
-              "templateHash": "16683431603240716471"
+              "version": "0.48.1.52935",
+              "templateHash": "18019735234397806538"
             }
           },
           "parameters": {
@@ -644,8 +644,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.43.8.12551",
-              "templateHash": "1770111973297396985"
+              "version": "0.48.1.52935",
+              "templateHash": "18198095041148776283"
             }
           },
           "parameters": {
@@ -662,7 +662,7 @@
             },
             "skuName": {
               "type": "string",
-              "defaultValue": "Free",
+              "defaultValue": "Standard",
               "allowedValues": [
                 "Free",
                 "Standard"
@@ -745,8 +745,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.43.8.12551",
-              "templateHash": "421474773147944673"
+              "version": "0.48.1.52935",
+              "templateHash": "17641199423695772860"
             }
           },
           "parameters": {
@@ -856,8 +856,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.43.8.12551",
-              "templateHash": "632281340125500589"
+              "version": "0.48.1.52935",
+              "templateHash": "6173668774943951156"
             }
           },
           "parameters": {
@@ -916,8 +916,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.43.8.12551",
-              "templateHash": "8437089059269516970"
+              "version": "0.48.1.52935",
+              "templateHash": "10917892117496166391"
             }
           },
           "parameters": {
@@ -1055,8 +1055,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.43.8.12551",
-              "templateHash": "12090138913385634570"
+              "version": "0.48.1.52935",
+              "templateHash": "5987728176329192534"
             }
           },
           "parameters": {
@@ -1316,8 +1316,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.43.8.12551",
-                      "templateHash": "111475626795941286"
+                      "version": "0.48.1.52935",
+                      "templateHash": "12651630844647610073"
                     }
                   },
                   "parameters": {
@@ -1448,8 +1448,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.43.8.12551",
-              "templateHash": "13756340056863722401"
+              "version": "0.48.1.52935",
+              "templateHash": "7672068185677523461"
             }
           },
           "parameters": {
@@ -1657,8 +1657,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.43.8.12551",
-              "templateHash": "3122736724107741299"
+              "version": "0.48.1.52935",
+              "templateHash": "7995950437666332659"
             }
           },
           "parameters": {
@@ -1803,8 +1803,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.43.8.12551",
-              "templateHash": "17187378898043713599"
+              "version": "0.48.1.52935",
+              "templateHash": "409812270022405976"
             }
           },
           "parameters": {

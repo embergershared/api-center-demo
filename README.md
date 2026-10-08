@@ -13,7 +13,7 @@ belong in this demo.
 | Gateway | API Management | Standard v2, one capacity unit, system-assigned identity |
 | AI execution | Microsoft Foundry | Modern AIServices S0 account and project; Entra authentication |
 | Chat model | Foundry OpenAI deployment `chat` | gpt-5.6-luna 2026-07-09, GlobalStandard, capacity 10 |
-| Embeddings | Foundry OpenAI deployment `embeddings` | text-embedding-3-small v1, Standard, capacity 10 |
+| Embeddings | Foundry OpenAI deployment `embeddings` | text-embedding-3-small v1, GlobalStandard, capacity 10 |
 | App-hosted REST API | `GridTelemetry.Api` | Container App hosting a demo-safe .NET Minimal API with `/substations`, `/substations/{id}/health`, and live OpenAPI at `/openapi/v1.json` |
 | App-hosted MCP server | `GridTools.Mcp` | Container App hosting a remote MCP server at `/mcp`, exposing `list_substations` and `get_substation_health` backed by `GridTelemetry.Api` |
 | Governed public docs MCP | Microsoft Learn MCP passthrough | APIM exposes `/learn-mcp` as a governed passthrough to Microsoft's public, read-only Learn MCP server for docs and code-sample search |
@@ -56,28 +56,32 @@ processing or a NERC-CIP compliance certification.
 
 Azure API Center is available in these Azure public-cloud regions, confirmed
 against the resource provider and [Microsoft's available-regions list](https://learn.microsoft.com/azure/api-center/overview#available-regions)
-on **2026-09-28**:
+on **2026-10-08** (the live provider includes regions not yet listed in the documentation):
 
 | Region | `AZURE_LOCATION` value |
 |---|---|
 | Australia East | `australiaeast` |
 | Canada Central | `canadacentral` |
 | Central India | `centralindia` |
+| Central US | `centralus` |
+| East Asia | `eastasia` |
 | East US | `eastus` |
+| East US 2 | `eastus2` |
 | France Central | `francecentral` |
 | Sweden Central | `swedencentral` |
 | UK South | `uksouth` |
 | West Europe | `westeurope` |
 
-This demo defaults to **East US**. **East US 2 (`eastus2`) is not supported by
-API Center.** This list covers API Center only; the full demo also requires
+The infrastructure defaults to **East US**; interactive setup defaults to
+**Central US**. **East US 2** is also available for API Center.
+This list covers API Center only; the full demo also requires
 regional availability for APIM Standard v2, Foundry models, Managed Redis, and
 monitoring. Preflight checks those services separately. `AI_LOCATION` and
 `CACHE_LOCATION` can differ from `AZURE_LOCATION`.
 
 App hosting (the `GridTelemetry.Api`/`GridTools.Mcp` Container Apps
 environment and container apps) uses its own `APP_HOSTING_LOCATION`,
-defaulting to **West US 3**, and a Consumption-only Container Apps
+defaulting to **West US 3** in both infrastructure and interactive setup, and a Consumption-only Container Apps
 environment, independent of `AZURE_LOCATION`. Some subscriptions have zero
 App Service VM quota for the Basic (B1)/PremiumV4 (P0V4) tiers in East US
 (and East US 2); West US 3 with Container Apps Consumption was confirmed to
@@ -85,6 +89,14 @@ have available quota, avoiding that quota error without moving API
 Center/APIM out of a supported region. Override the region with
 `azd env set APP_HOSTING_LOCATION <region>` if your subscription's quota
 differs.
+
+If provisioning fails with `ManagedEnvironmentCapacityHeavyUsageError` or
+`AKSCapacityHeavyUsage`, the region lacks physical capacity; this is not a
+resource-name collision. Change only `APP_HOSTING_LOCATION` to a supported
+alternative and preview again. This changes the names of the hosting environment,
+apps, registry, and identity, leaving the main API Center/APIM/AI/cache resources
+in place. Old hosting resources are not automatically deleted and may continue
+to incur charges. Preview and quota checks cannot reserve or guarantee capacity.
 
 To refresh the API Center region list for your active Azure subscription:
 
@@ -99,23 +111,28 @@ old Azure resources so stale outputs are not mistaken for live services.
 Deleting Azure resources does not delete local azd environments.
 
 ```powershell
-$subscriptionId = '<subscription-guid>'
-$env:AZURE_ENV_NAME = 'utility-ai-demo'
-az account set --subscription $subscriptionId
-azd env new $env:AZURE_ENV_NAME --subscription $subscriptionId --location eastus --no-prompt
-azd env set AZURE_SUBSCRIPTION_ID $subscriptionId
-azd env set AZURE_LOCATION eastus
-azd env set DEPLOYMENT_PROFILE full
-azd env set APIM_PUBLISHER_NAME Contoso
-azd env set APIM_PUBLISHER_EMAIL api-team@contoso.com
-.\scripts\set-deployment-tags.ps1
+az login
+azd auth login
+.\scripts\setup-environment.ps1
+# Register required providers before preview; see the step-by-step guide below.
 .\scripts\01-create-service.ps1 -PreviewOnly
 .\scripts\01-create-service.ps1
 ```
 
+`setup-environment.ps1` prompts for the environment name, subscription ID, location,
+app-hosting/AI/cache regions, and APIM publisher details. It creates or reuses and
+selects the azd environment, selects the Azure CLI subscription, saves changed settings
+in azd, and initializes the existing deployment defaults/tags. It clears stale
+process overrides for deployment parameters so subsequent scripts and azd use
+the saved environment. Reruns show saved values as prompt defaults, preserve
+unchanged settings, deployed outputs, and the creation timestamp, and refresh
+the last-updated timestamp. Missing settings from a partial setup are initialized.
+It does not provision Azure resources. See the concise
+[deployment steps](docs/Azure-Infra-Deployment.md), including provider registration.
+
 The final command repeats preflight/preview and asks before provisioning.
 Review the preview for costs and unexpected changes. These commands have **not**
-been executed for you. East US is the default; other API Center locations are
+been executed for you. Interactive setup defaults to Central US; other API Center locations are
 listed [above](#azure-api-center-deployment-regions). AI and cache regions can
 be overridden separately; see [AI gateway setup](docs/AI_GATEWAY.md).
 
@@ -176,19 +193,35 @@ entries for Fleet Vehicle and Learn MCP; the default `full` profile also
 creates Utility AI. REST definitions are imported from the repository.
 The Fleet route is a specification-only demo, not a live Fleet backend.
 
-No API Center/APIM integration is created by provisioning. If you choose to
-run script 05 after provisioning, synchronized entries may appear separately;
-only then are duplicates expected. Use entries with **(managed)**
+Provisioning then runs `scripts/05-link-apim.ps1` to create or verify the
+API Center/APIM synchronization link. Synchronized entries may appear separately,
+so duplicates are expected. Use entries with **(managed)**
 in the title (Learn uses **MCP passthrough, managed**) for stable runtime URLs.
 The managed IDs are `managed-fleet-vehicle`, `managed-mslearn-mcp`, and
 `managed-utility-ai`, separate from Azure-generated synchronization IDs.
 Previously restored numeric-ID entries are not deleted by provisioning.
 The Learn deployment points to `/learn-mcp/mcp`. Reruns reuse the managed IDs
-and verify their URLs. Script 05 explicitly creates the APIM integration after
-checking the API Center identity and APIM Reader role. Synchronization is
-asynchronous: confirm its state in the portal before claiming it works. If an
-older environment already has a stuck link, provisioning leaves it untouched;
-resolve it before running script 05 again.
+and verify their URLs. Bicep owns the API Center system-assigned identity and
+its **API Management Service Reader Role** assignment on the APIM resource.
+Script 05 checks the live identity against the deployment output, verifies the
+configured plan and Reader role, and retries role visibility/permission
+propagation up to six attempts, 20 seconds apart, as in the working snapshot.
+It does not grant permissions to the APIM identity in place of API Center.
+Azure may return the integration's `msiResourceId` as
+`<tenantId>/<principalId>/systemAssigned` rather than leaving it empty.
+Script 05 accepts that form only when both IDs match the verified API Center
+identity; unrelated or user-assigned identities still fail validation.
+
+Existing links to the same APIM are reused, including `sync-from-...` links
+from the snapshot; they are never deleted or reset. New links use the supported
+`az apic integration create apim` command and let Azure select the sync
+environment, separate from the independently managed catalog environment.
+Script 05 polls for `linkState.state=syncing` for up to ten minutes.
+A failed, unrecognized, or still-initializing state fails the postprovision
+hook with diagnostic details and a read-only inspection command. This does
+not roll back deployed resources. After resolving the reported issue, rerun
+script 05 without reprovisioning. An active link does not prove every API has
+arrived; inventory updates remain asynchronous.
 
 The **Foundry AI Gateway association is a different integration**. To route
 Foundry project model traffic through the existing APIM instance, in Foundry
@@ -206,12 +239,12 @@ and [Microsoft's setup instructions](https://learn.microsoft.com/azure/foundry/c
 .\scripts\02-metadata-schema.ps1
 .\scripts\03-register-openapi-api.ps1
 .\scripts\04-versions-and-deprecation.ps1
-# Optional, after provisioning, to start APIM synchronization:
+# Rerunnable: verify the automatically provisioned link, or retry a failed link step:
 .\scripts\05-link-apim.ps1
 ```
 
 **API Center defaults to Standard (`API_CENTER_SKU=Standard`).** A fresh
-provision creates Standard before script 05 links APIM, so Standard charges
+provision creates Standard before the postprovision link step, so Standard charges
 may apply until an eligible APIM link is established. The deployed Standard v2
 APIM provides Standard at no extra API Center cost **while linked**; deploying
 APIM alone does not activate that benefit. Set `API_CENTER_SKU=Free` explicitly
@@ -291,12 +324,19 @@ with the working Grid Maintenance Agent demo assets:
 
 - `10-register-grid-telemetry-api.ps1` downloads the live OpenAPI document from
   `GridTelemetry.Api` and registers **Grid Telemetry API** in API Center using
-  the same custom-metadata pattern as script 03.
+  the same custom-metadata pattern as script 03 and the document's actual OpenAPI
+  version. Transient HTTP failures are retried up to three times (30 seconds
+  per request, five seconds between attempts).
 - `11-register-mcp-server.ps1` registers **Grid Tools MCP Server** in the API
-  Center MCP registry and requires API Center **Standard** plus preview
-  `apic-extension` support for `az apic mcp-server`. If that command group is
-  unavailable, the script stops with an actionable install/upgrade message
-  rather than pretending registration succeeded.
+  Center MCP registry and requires API Center **Standard**. It uses `az rest`
+  with the same ARM API as catalog provisioning, creating a `kind: mcp` asset,
+  version, definition, and production deployment at `/mcp`, then verifying the
+  stored kind and runtime URL. It does not require `az apic mcp-server`.
+- Both registration scripts reject the provisioning placeholder image before
+  making catalog changes. Run `azd deploy grid-telemetry-api` and
+  `azd deploy grid-tools-mcp` in the selected environment first; provisioning
+  alone does not publish the applications. Their `NERC-CIP` metadata matches
+  script 02's schema and is a demo classification, not a compliance claim.
 - `12-grid-agent-demo.ps1` uses preview/evolving Foundry Agent Service REST
   APIs via `az rest` to create or update the **Grid Maintenance Agent**, attach
   the remote MCP tool connection, and verify that the governed runtime remains
