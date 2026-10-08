@@ -92,7 +92,7 @@ function Set-ProvisionedCatalog {
         Write-Host "Provisioned $($entry.title): $($entry.url)"
     }
 
-    Write-Host 'Independent catalog entries configured. To link APIM later, run scripts/05-link-apim.ps1 explicitly.'
+    Write-Host 'Independent catalog entries configured. The next postprovision step verifies the APIM synchronization link.'
 }
 
 if ($MyInvocation.InvocationName -ne '.') {

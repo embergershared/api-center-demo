@@ -30,14 +30,15 @@ the API Center managed identity's APIM-scoped reader assignment. The full profil
 also adds modern Foundry with chat/embeddings deployments, vector-capable
 Managed Redis, and authenticated AI gateway policies and telemetry. The deployer
 needs `Role Based Access Control Administrator` in addition to `Contributor`.
-Step 5 verifies those permissions and configures synchronization without
-changing infrastructure. Names include region, subscription code, and azd
+The postprovision hook verifies those permissions and configures synchronization.
+Script 05 can be rerun to check the link without recreating it or changing
+identity/RBAC. Names include region, subscription code, and azd
 environment, for example `apic-use-s3-apictr-demo`.
 Continuous synchronization also requires preview `apic-extension` 1.2.0b1 or
 later (`az extension add --name apic-extension --upgrade --allow-preview true`).
 
 The intended API Center plan is Standard and Bicep creates it with an explicit
-Standard SKU by default. Script 05 links the deployed Standard v2 APIM; verify
+Standard SKU by default. The hook runs script 05 to link Standard v2 APIM; verify
 the link before claiming the linked-APIM benefit. Standard may incur charges
 until the eligible link is established. An environment explicitly pinned to
 Free must be upgraded in the portal and then set `API_CENTER_SKU=Standard`
@@ -45,12 +46,12 @@ before reprovisioning. See the README for upgrade references.
 
 | # | Script | What to show | Key line |
 |---|--------|--------------|----------|
-| 1 | `01-create-service.ps1` | Empty API Center service and Standard v2 APIM instance just created | "API Center is our blank system of record; APIM is the gateway we'll connect to it." |
+| 1 | `01-create-service.ps1` | Provisioned API Center, managed demo entries, and linked Standard v2 APIM | "API Center is our system of record; APIM is the connected gateway." |
 | 2 | `02-metadata-schema.ps1` | Custom metadata fields: lifecycle stage, business owner, compliance tag | "These become searchable/filterable facets — e.g. tag APIs owned by the Fleet Platform team vs. a charging-vendor integration." |
 | 3 | `03-register-openapi-api.ps1` | Register **Fleet Vehicle API** (vehicles, battery state, depot charging sessions) from a plain OpenAPI file upload | "Not APIM-only — any spec, any origin, including third-party telematics/charging vendors." |
 | 4 | Portal UI | Filter/search catalog by the new metadata fields | "Governance and audit-readiness, not just a list of URLs." |
 | 5 | `04-versions-and-deprecation.ps1` | v1 (deprecated) vs v2 (production), then import v2 into APIM at `/fleet` | "Consumers see version history and deprecation status at a glance, while APIM gets the gateway route used by the deployment." |
-| 6 | `05-link-apim.ps1` | Link the demo APIM instance for built-in synchronization | "This isn't a one-time import — APIs added or changed in APIM stay synchronized with API Center." |
+| 6 | `05-link-apim.ps1` | Recheck the automatically created APIM synchronization link | "This isn't a one-time import — APIs added or changed in APIM stay synchronized with API Center." |
 | 7 | `06-environments-deployments.ps1` | Create dev/test/prod catalog records and map the Fleet Vehicle API to the imported APIM route | "These records describe deployment locations; they do not create separate azd environments or a live Fleet backend." |
 | 8 | `07-lint-analysis.ps1` | Run Spectral ruleset against the "messy" **Legacy Depot Charger API** spec | "Shift-left governance — catch bad API design (missing descriptions, no error handling) before a depot charger integration ships." |
 | 9 | Portal UI | Self-service developer catalog/portal | "This is what your developers actually browse to find and consume approved APIs — vehicle telemetry, battery, or charging session data — without re-building it." |
@@ -68,7 +69,7 @@ entries' integration source before claiming successful synchronization. It
 prints the Foundry project and gateway endpoints but leaves billable calls to
 script 09 with explicit confirmation.
 
-Only after running script 05 and verifying its link can APIM synchronization
+After the postprovision link step reports `syncing`, APIM synchronization can
 also surface the public Microsoft Learn MCP
 passthrough exposed at `/learn-mcp/mcp` (the `MSLEARN_MCP_URL` output).
 Use this URL for the HTTP MCP server in VS Code, not `/learn-mcp/api/mcp`.

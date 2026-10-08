@@ -49,8 +49,8 @@ an update may return successfully while leaving the old value unchanged.
 Read back the deployment after any repair and initialize MCP using that exact
 URL and the portal's Origin header.
 
-`azd provision` now runs `scripts/provision-catalog.ps1` after deployment to
-configure both synchronization and independent catalog entries. Duplicate
+`azd provision` runs `scripts/provision-catalog.ps1` after deployment for
+independent catalog entries, then `scripts/05-link-apim.ps1` for synchronization. Duplicate
 synchronized copies are intentional. Use `managed-mslearn-mcp` for portal
 testing: its runtime URL is explicitly managed and checked on every run.
 `managed-fleet-vehicle` includes the Fleet v2 specification, and
@@ -60,8 +60,11 @@ The independent records use a separate `managed-apim` environment and no
 `apiSourceId`; Azure-generated synchronization records cannot take ownership.
 Provisioning never deletes previously restored entries.
 
-The hook creates a missing integration, checks an existing integration's source,
-and reports integration errors rather than treating them as successful sync.
+The link step verifies the API Center identity and its APIM-scoped Reader role
+before creating a missing integration. It retries permission propagation and
+reuses any existing link to this APIM, including a snapshot-named link. It
+checks the source and system-assigned identity, waits up to ten minutes for
+`syncing`, and fails on errors or a timeout rather than claiming successful sync.
 It does not unlink/recreate a failing integration, which would delete its
 catalog records. Back up linked definitions and metadata before any manual
 unlink. Removing the link can end the linked-APIM Standard-plan pricing benefit.

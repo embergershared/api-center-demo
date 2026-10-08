@@ -74,8 +74,9 @@ azd env set CHAT_MODEL_VERSION 2026-07-09
 
 ## One-time portal steps
 
-1. API Center is provisioned on Standard by default. Link APIM using script 05
-   to obtain the eligible linked-APIM benefit; Standard may be billed until
+1. API Center is provisioned on Standard by default. The postprovision hook
+   runs script 05 to establish or verify the APIM link; rerun it to inspect
+   an existing link after a failed hook. Standard may be billed until
    that link is established. Only an environment explicitly pinned to Free
    needs the portal upgrade and `azd env set API_CENTER_SKU Standard` afterward.
 2. Open the modern Foundry project identified by `AZURE_AI_PROJECT_ENDPOINT`.

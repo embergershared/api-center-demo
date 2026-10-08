@@ -176,19 +176,31 @@ entries for Fleet Vehicle and Learn MCP; the default `full` profile also
 creates Utility AI. REST definitions are imported from the repository.
 The Fleet route is a specification-only demo, not a live Fleet backend.
 
-No API Center/APIM integration is created by provisioning. If you choose to
-run script 05 after provisioning, synchronized entries may appear separately;
-only then are duplicates expected. Use entries with **(managed)**
+Provisioning then runs `scripts/05-link-apim.ps1` to create or verify the
+API Center/APIM synchronization link. Synchronized entries may appear separately,
+so duplicates are expected. Use entries with **(managed)**
 in the title (Learn uses **MCP passthrough, managed**) for stable runtime URLs.
 The managed IDs are `managed-fleet-vehicle`, `managed-mslearn-mcp`, and
 `managed-utility-ai`, separate from Azure-generated synchronization IDs.
 Previously restored numeric-ID entries are not deleted by provisioning.
 The Learn deployment points to `/learn-mcp/mcp`. Reruns reuse the managed IDs
-and verify their URLs. Script 05 explicitly creates the APIM integration after
-checking the API Center identity and APIM Reader role. Synchronization is
-asynchronous: confirm its state in the portal before claiming it works. If an
-older environment already has a stuck link, provisioning leaves it untouched;
-resolve it before running script 05 again.
+and verify their URLs. Bicep owns the API Center system-assigned identity and
+its **API Management Service Reader Role** assignment on the APIM resource.
+Script 05 checks the live identity against the deployment output, verifies the
+configured plan and Reader role, and retries role visibility/permission
+propagation up to six attempts, 20 seconds apart, as in the working snapshot.
+It does not grant permissions to the APIM identity in place of API Center.
+
+Existing links to the same APIM are reused, including `sync-from-...` links
+from the snapshot; they are never deleted or reset. New links use the supported
+`az apic integration create apim` command and let Azure select the sync
+environment, separate from the independently managed catalog environment.
+Script 05 polls for `linkState.state=syncing` for up to ten minutes.
+A failed, unrecognized, or still-initializing state fails the postprovision
+hook with diagnostic details and a read-only inspection command. This does
+not roll back deployed resources. After resolving the reported issue, rerun
+script 05 without reprovisioning. An active link does not prove every API has
+arrived; inventory updates remain asynchronous.
 
 The **Foundry AI Gateway association is a different integration**. To route
 Foundry project model traffic through the existing APIM instance, in Foundry
@@ -206,12 +218,12 @@ and [Microsoft's setup instructions](https://learn.microsoft.com/azure/foundry/c
 .\scripts\02-metadata-schema.ps1
 .\scripts\03-register-openapi-api.ps1
 .\scripts\04-versions-and-deprecation.ps1
-# Optional, after provisioning, to start APIM synchronization:
+# Rerunnable: verify the automatically provisioned link, or retry a failed link step:
 .\scripts\05-link-apim.ps1
 ```
 
 **API Center defaults to Standard (`API_CENTER_SKU=Standard`).** A fresh
-provision creates Standard before script 05 links APIM, so Standard charges
+provision creates Standard before the postprovision link step, so Standard charges
 may apply until an eligible APIM link is established. The deployed Standard v2
 APIM provides Standard at no extra API Center cost **while linked**; deploying
 APIM alone does not activate that benefit. Set `API_CENTER_SKU=Free` explicitly

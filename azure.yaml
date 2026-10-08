@@ -26,4 +26,7 @@ hooks:
   postprovision:
     shell: pwsh
     continueOnError: false
-    run: ./scripts/provision-catalog.ps1
+    run: |
+      $ErrorActionPreference = 'Stop'
+      ./scripts/provision-catalog.ps1
+      ./scripts/05-link-apim.ps1
