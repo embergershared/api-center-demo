@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GridTelemetry.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+275eff1de09e72092bc163737e897c0ca2b536bc")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d1e380fc9d96b76f785e2b5ab32f91961ea68c89")]
 [assembly: System.Reflection.AssemblyProductAttribute("GridTelemetry.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GridTelemetry.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

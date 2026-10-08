@@ -38,6 +38,8 @@ function Set-ApimIntegration {
         Write-Warning 'This environment explicitly uses Free. To use Standard features, upgrade the plan and run: azd env set API_CENTER_SKU Standard'
     }
     $principalId = $service.identity.principalId
+    $tenantId = $service.identity.tenantId
+    $systemIdentityReference = "$tenantId/$principalId/systemAssigned"
     $readerRoleId = "/subscriptions/$subscription/providers/Microsoft.Authorization/roleDefinitions/71522526-b88f-4d52-b57f-d31fc3546d0d"
     for ($attempt = 1; $attempt -le 6; $attempt++) {
         $assignment = Invoke-DemoAz -Arguments @(
@@ -95,8 +97,13 @@ function Set-ApimIntegration {
         $link = (Invoke-DemoAz -Arguments (@('apic', 'integration', 'show') + $scope + @(
             '--integration-name', $integrationName, '--output', 'json'
         )) -FailureMessage 'Failed to read APIM integration state') -join [Environment]::NewLine | ConvertFrom-Json
-        if ($link.azureApiManagementSource.resourceId -ine $apimId -or
-            -not [string]::IsNullOrWhiteSpace($link.azureApiManagementSource.msiResourceId)) {
+        $identityReference = $link.azureApiManagementSource.msiResourceId
+        # Azure may resolve an omitted MSI field into the API Center tenant/principal reference.
+        $usesSystemIdentity = [string]::IsNullOrWhiteSpace($identityReference) -or (
+            -not [string]::IsNullOrWhiteSpace($tenantId) -and
+            $identityReference -ieq $systemIdentityReference
+        )
+        if ($link.azureApiManagementSource.resourceId -ine $apimId -or -not $usesSystemIdentity) {
             throw "Integration '$integrationName' does not use the expected APIM source and API Center system-assigned identity. Inspect it with: $diagnosticCommand"
         }
         $state = $link.linkState.state

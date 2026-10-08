@@ -1,5 +1,5 @@
 # 11-register-mcp-server.ps1 — register the deployed Grid Tools MCP server in
-# API Center's MCP registry. This depends on a preview apic-extension surface.
+# API Center's MCP registry using the same ARM API as provision-catalog.ps1.
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '00-vars.ps1')
 . (Join-Path $PSScriptRoot 'demo-cli.ps1')
@@ -7,11 +7,11 @@ $ErrorActionPreference = 'Stop'
 $gridMcpAppUrl = Get-DeploymentValue $deploymentValues 'GRID_MCP_APP_URL'
 $gridMcpAppName = Get-DeploymentValue $deploymentValues 'GRID_MCP_APP_NAME'
 $mcpRuntimeUrl = "$($gridMcpAppUrl.TrimEnd('/'))/mcp"
-$customProperties = '{
-    "lifecycleStage": "production",
-    "businessOwner": "Grid Operations Team <grid-ops@contoso.com>",
-    "complianceTag": ["NERC-CIP", "grid-operational-data"]
-  }'
+$customProperties = @{
+    lifecycleStage = 'production'
+    businessOwner = 'Grid Operations Team <grid-ops@contoso.com>'
+    complianceTag = @('NERC-CIP')
+}
 
 Write-Host '==> Verifying the API Center plan supports the MCP registry'
 $sku = Invoke-DemoAz -Arguments @(
@@ -25,61 +25,53 @@ if ($sku -ne 'Standard') {
     throw "API Center '$($env:APIC_SERVICE)' must be on the Standard plan before you can register MCP servers. Current plan: '$sku'. Upgrade it in the portal, then run 'azd env set API_CENTER_SKU Standard'."
 }
 
-Write-Host '==> Probing the installed apic-extension for MCP server support'
-$extensionVersion = $null
-$PSNativeCommandUseErrorActionPreference = $false
-$extensionDetails = az extension show --name apic-extension --only-show-errors 2>&1
-if ($LASTEXITCODE -eq 0) {
-    try {
-        $extensionVersion = (($extensionDetails -join [Environment]::NewLine) | ConvertFrom-Json).version
-    }
-    catch {
-        $extensionVersion = $null
-    }
-}
+Assert-DemoContainerAppDeployed -AppName $gridMcpAppName -ServiceName 'grid-tools-mcp'
+$workspace = "$($env:APIC_RESOURCE_ID)/workspaces/default"
+$apiId = "$workspace/apis/grid-tools-mcp"
+$versionId = 'v1-0'
+$definitionId = "$apiId/versions/$versionId/definitions/mcp"
+$deploymentId = "$apiId/deployments/prod"
 
-$probeOutput = az apic mcp-server --help 2>&1
-if ($LASTEXITCODE -ne 0) {
-    $versionNote = if ([string]::IsNullOrWhiteSpace($extensionVersion)) {
-        'The apic-extension is not installed in this shell.'
-    }
-    else {
-        "Installed apic-extension version: $extensionVersion."
-    }
-
-    throw "The installed Azure CLI does not expose 'az apic mcp-server'. $versionNote Install or upgrade preview support with: az extension add --name apic-extension --upgrade --allow-preview true`n$($probeOutput -join [Environment]::NewLine)"
-}
-
-# This preview command shape is intentionally aligned with the portal fields for
-# a remote MCP server registration. The runtime URL uses the streamable HTTP
-# endpoint exposed by GridTools.Mcp at /mcp.
 Write-Host "==> Ensuring the production environment record exists for remote MCP registration"
-Invoke-DemoAz -Arguments @(
-    'apic', 'environment', 'create',
-    '--resource-group', $env:RESOURCE_GROUP,
-    '--service-name', $env:APIC_SERVICE,
-    '--environment-id', $env:ENV_PROD,
-    '--title', 'Prod',
-    '--type', 'production',
-    '-o', 'table'
-) -FailureMessage "Failed to create environment '$($env:ENV_PROD)'"
+$null = Invoke-CatalogRest PUT "$workspace/environments/$($env:ENV_PROD)" @{
+    properties = @{ title = 'Prod'; kind = 'production' }
+}
 
 Write-Host "==> Registering MCP server '$gridMcpAppName' at $mcpRuntimeUrl"
-Invoke-DemoAz -Arguments @(
-    'apic', 'mcp-server', 'create',
-    '--resource-group', $env:RESOURCE_GROUP,
-    '--service-name', $env:APIC_SERVICE,
-    '--mcp-server-id', 'grid-tools-mcp',
-    '--title', 'Grid Tools MCP Server',
-    '--summary', 'Synthetic grid-maintenance MCP tools backed by the deployed GridTools.Mcp App Service.',
-    '--description', "Remote MCP server hosted by '$gridMcpAppName' for demo-safe substation lookup and health checks.",
-    '--version-id', 'v1-0',
-    '--version-title', 'v1',
-    '--lifecycle-stage', 'production',
-    '--remote-url', $mcpRuntimeUrl,
-    '--environment-id', $env:ENV_PROD,
-    '-o', 'table'
-) -JsonArguments @{ '--custom-properties' = $customProperties } `
-    -FailureMessage "Failed to register MCP server 'grid-tools-mcp'"
+$null = Invoke-CatalogRest PUT $apiId @{
+    properties = @{
+        title = 'Grid Tools MCP Server'
+        kind = 'mcp'
+        summary = 'Synthetic grid-maintenance MCP tools backed by the deployed GridTools.Mcp Container App.'
+        description = "Remote MCP server hosted by '$gridMcpAppName' for demo-safe substation lookup and health checks."
+        lifecycleStage = 'production'
+        customProperties = $customProperties
+    }
+}
+$null = Invoke-CatalogRest PUT "$apiId/versions/$versionId" @{
+    properties = @{ title = 'v1'; lifecycleStage = 'production' }
+}
+$null = Invoke-CatalogRest PUT $definitionId @{
+    properties = @{ title = 'MCP'; description = 'Remote MCP server using streamable HTTP at /mcp.' }
+}
+$null = Invoke-CatalogRest PUT $deploymentId @{
+    properties = @{
+        title = 'Grid Tools MCP production'
+        environmentId = "/workspaces/default/environments/$($env:ENV_PROD)"
+        definitionId = "/workspaces/default/apis/grid-tools-mcp/versions/$versionId/definitions/mcp"
+        server = @{ runtimeUri = @($mcpRuntimeUrl) }
+    }
+}
+
+$api = Invoke-CatalogRest GET $apiId
+$deployment = Invoke-CatalogRest GET $deploymentId
+if ($api.properties.kind -cne 'mcp' -or
+    $api.properties.apiSourceId -or $deployment.properties.apiSourceId -or
+    $deployment.properties.definitionId -cne "/workspaces/default/apis/grid-tools-mcp/versions/$versionId/definitions/mcp" -or
+    $deployment.properties.environmentId -cne "/workspaces/default/environments/$($env:ENV_PROD)" -or
+    @($deployment.properties.server.runtimeUri).Count -ne 1 -or
+    $deployment.properties.server.runtimeUri[0] -cne $mcpRuntimeUrl) {
+    throw "Catalog readback failed for 'grid-tools-mcp'; expected an independent MCP asset with its production /mcp runtime URL."
+}
 
 Write-Host "==> Registered. In the portal, open API Center > Assets and the MCP registry experience to show 'Grid Tools MCP Server' beside the REST APIs."

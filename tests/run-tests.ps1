@@ -17,8 +17,10 @@ function Assert-Throws {
 }
 
 & (Join-Path $PSScriptRoot 'deployment-defaults.tests.ps1')
+& (Join-Path $PSScriptRoot 'setup-environment.tests.ps1')
 & (Join-Path $PSScriptRoot 'provision-catalog.tests.ps1')
 & (Join-Path $PSScriptRoot 'link-apim.tests.ps1')
+& (Join-Path $PSScriptRoot 'grid-registration.tests.ps1')
 
 foreach ($folder in @('scripts', 'tests')) {
     Get-ChildItem (Join-Path $root $folder) -Filter *.ps1 -Recurse | ForEach-Object {

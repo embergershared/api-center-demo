@@ -18,7 +18,7 @@
     "chatCapacity": { "value": "${CHAT_CAPACITY=10}" },
     "embeddingModelName": { "value": "${EMBEDDING_MODEL_NAME=text-embedding-3-small}" },
     "embeddingModelVersion": { "value": "${EMBEDDING_MODEL_VERSION=1}" },
-    "embeddingDeploymentSku": { "value": "${EMBEDDING_DEPLOYMENT_SKU=Standard}" },
+    "embeddingDeploymentSku": { "value": "${EMBEDDING_DEPLOYMENT_SKU=GlobalStandard}" },
     "embeddingCapacity": { "value": "${EMBEDDING_CAPACITY=10}" },
     "redisSku": { "value": "${REDIS_SKU=Balanced_B0}" },
     "redisHighAvailability": { "value": "${REDIS_HIGH_AVAILABILITY=false}" },

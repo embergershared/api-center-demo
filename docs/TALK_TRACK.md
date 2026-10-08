@@ -129,18 +129,21 @@ output, call out the two tool names: `list_substations` and
 > capabilities as MCP tools. The agent gets bounded actions, and we still know
 > exactly what backend API those tools depend on."
 
-Register both assets into API Center:
+Deploy both services before registering the assets into API Center. Provisioning
+alone leaves placeholder images; the registration scripts detect these and stop:
 
 ```powershell
+azd deploy grid-telemetry-api
+azd deploy grid-tools-mcp
 .\scripts\10-register-grid-telemetry-api.ps1
 .\scripts\11-register-mcp-server.ps1
 ```
 
 Script 10 imports the live OpenAPI document into API Center as **Grid Telemetry
 API**. Script 11 registers **Grid Tools MCP Server** in the API Center MCP
-registry. Call out that `az apic mcp-server` is preview/evolving and currently
-depends on the preview `apic-extension`; if support is missing, the script
-fails with an install/upgrade message instead of masking the dependency.
+registry using `az rest`, without depending on the unavailable
+`az apic mcp-server` command group. It creates an MCP-kind asset and a production
+deployment pointing at `/mcp`, then reads them back to verify the registration.
 
 Finally, create the Foundry-side agent and tool attachment:
 

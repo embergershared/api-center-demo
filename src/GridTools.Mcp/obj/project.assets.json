@@ -161,24 +161,31 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\emberger\\.nuget\\packages\\": {}
+    "C:\\Users\\emberger\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\git\\GitHub\\gopher194_personal\\embergershared\\api-center-demo\\src\\GridTools.Mcp\\GridTools.Mcp.csproj",
+      "projectUniqueName": "D:\\Git\\GitHub\\gopher194_personal\\embergershared\\api-center-demo\\src\\GridTools.Mcp\\GridTools.Mcp.csproj",
       "projectName": "GridTools.Mcp",
-      "projectPath": "D:\\git\\GitHub\\gopher194_personal\\embergershared\\api-center-demo\\src\\GridTools.Mcp\\GridTools.Mcp.csproj",
+      "projectPath": "D:\\Git\\GitHub\\gopher194_personal\\embergershared\\api-center-demo\\src\\GridTools.Mcp\\GridTools.Mcp.csproj",
       "packagesPath": "C:\\Users\\emberger\\.nuget\\packages\\",
-      "outputPath": "D:\\git\\GitHub\\gopher194_personal\\embergershared\\api-center-demo\\src\\GridTools.Mcp\\obj\\",
+      "outputPath": "D:\\Git\\GitHub\\gopher194_personal\\embergershared\\api-center-demo\\src\\GridTools.Mcp\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\emberger\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\emberger\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://packagefeedproxy.microsoft.io/nuget/v3/index.json": {}
       },
       "frameworks": {

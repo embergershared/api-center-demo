@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\GridTelemetry.Api\GridTelemetry.Api.csproj" />
+    <ProjectReference Include="..\..\src\GridTools.Mcp\GridTools.Mcp.csproj" Aliases="GridMcp" />
   </ItemGroup>
 
   <ItemGroup>

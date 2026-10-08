@@ -25,17 +25,25 @@ $values = @{
     APIC_PRINCIPAL_ID = '00000000-0000-0000-0000-000000000002'
     APIM_RESOURCE_ID = '/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-group/providers/Microsoft.ApiManagement/service/test-gateway'
 }
+$tenantId = '00000000-0000-0000-0000-000000000003'
 function New-TestLink([string] $Name = 'apim-integration') {
     @{
         name = $Name
-        azureApiManagementSource = @{ resourceId = $values.APIM_RESOURCE_ID }
+        azureApiManagementSource = @{
+            resourceId = $values.APIM_RESOURCE_ID
+            msiResourceId = "$tenantId/$($values.APIC_PRINCIPAL_ID)/systemAssigned"
+        }
         linkState = @{ state = 'syncing'; message = 'service detail'; lastUpdatedOn = '2026-10-06T12:00:00Z' }
     }
 }
 function Reset-LinkTest {
     $script:linkTestState = @{
         subscription = $values.AZURE_SUBSCRIPTION_ID
-        service = @{ id = $values.APIC_RESOURCE_ID; identity = @{ principalId = $values.APIC_PRINCIPAL_ID }; sku = @{ name = 'Standard' } }
+        service = @{
+            id = $values.APIC_RESOURCE_ID
+            identity = @{ principalId = $values.APIC_PRINCIPAL_ID; tenantId = $tenantId; type = 'SystemAssigned' }
+            sku = @{ name = 'Standard' }
+        }
         integrations = @()
         link = (New-TestLink)
         states = @('syncing')
@@ -129,6 +137,22 @@ $script:linkTestState.integrations = @($script:linkTestState.link)
 $null = Set-ApimIntegration -Values $values 6>&1 3>&1
 Assert-Link ($script:linkTestState.createCalls -eq 0) 'Snapshot-named links must be reused.'
 
+foreach ($identityShape in @('omitted', 'null', 'empty', 'whitespace', 'uppercase')) {
+    Reset-LinkTest
+    $source = $script:linkTestState.link.azureApiManagementSource
+    switch ($identityShape) {
+        omitted { $source.Remove('msiResourceId') }
+        null { $source.msiResourceId = $null }
+        empty { $source.msiResourceId = '' }
+        whitespace { $source.msiResourceId = ' ' }
+        uppercase { $source.msiResourceId = $source.msiResourceId.ToUpperInvariant() }
+    }
+    $script:linkTestState.integrations = @($script:linkTestState.link)
+    $null = Set-ApimIntegration -Values $values -StateChecks 3 6>&1 3>&1
+    Assert-Link ($script:linkTestState.createCalls -eq 0 -and
+        $script:linkTestState.showCalls -eq 1) "Valid system-assigned identity form '$identityShape' must be reused without changing the link."
+}
+
 foreach ($property in @('principalId', 'serviceId', 'plan')) {
     Reset-LinkTest
     switch ($property) {
@@ -193,7 +217,8 @@ foreach ($linkState in @('initializing', 'failed', 'disabled', 'unknown', '')) {
     else { Assert-Link ($script:linkTestState.showCalls -eq 1) 'Unexpected states must fail immediately.' }
 }
 
-foreach ($case in @('collision', 'duplicate', 'wrong-source', 'wrong-identity', 'malformed')) {
+foreach ($case in @('collision', 'duplicate', 'wrong-source', 'wrong-identity',
+    'wrong-tenant', 'wrong-principal', 'missing-tenant', 'user-assigned', 'malformed')) {
     Reset-LinkTest
     switch ($case) {
         collision {
@@ -212,6 +237,22 @@ foreach ($case in @('collision', 'duplicate', 'wrong-source', 'wrong-identity', 
         }
         wrong-identity {
             $script:linkTestState.link.azureApiManagementSource.msiResourceId = 'user-assigned-identity'
+            $pattern = 'system-assigned identity'
+        }
+        wrong-tenant {
+            $script:linkTestState.link.azureApiManagementSource.msiResourceId = "another-tenant/$($values.APIC_PRINCIPAL_ID)/systemAssigned"
+            $pattern = 'system-assigned identity'
+        }
+        wrong-principal {
+            $script:linkTestState.link.azureApiManagementSource.msiResourceId = "$tenantId/another-principal/systemAssigned"
+            $pattern = 'system-assigned identity'
+        }
+        missing-tenant {
+            $script:linkTestState.service.identity.tenantId = ''
+            $pattern = 'system-assigned identity'
+        }
+        user-assigned {
+            $script:linkTestState.link.azureApiManagementSource.msiResourceId = "$tenantId/$($values.APIC_PRINCIPAL_ID)/userAssigned"
             $pattern = 'system-assigned identity'
         }
         malformed { $script:linkTestState.malformedList = $true; $pattern = 'did not return an array' }

@@ -39,7 +39,7 @@ param chatCapacity int = 10
 param embeddingModelName string = 'text-embedding-3-small'
 param embeddingModelVersion string = '1'
 @allowed(['GlobalStandard', 'Standard'])
-param embeddingDeploymentSku string = 'Standard'
+param embeddingDeploymentSku string = 'GlobalStandard'
 @minValue(1)
 param embeddingCapacity int = 10
 @allowed(['Balanced_B0', 'Balanced_B1'])
